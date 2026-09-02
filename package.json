@@ -1,0 +1,27 @@
+{
+  "name": "pi-web",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Projeto PI Web",
+  "scripts": {
+    "start": "node api/server.js"
+  },
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gabrielhnogueira-cmd/PI-Web.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/gabrielhnogueira-cmd/PI-Web/issues"
+  },
+  "homepage": "https://github.com/gabrielhnogueira-cmd/PI-Web#readme",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "sqlite3": "^6.0.1"
+  }
+}
