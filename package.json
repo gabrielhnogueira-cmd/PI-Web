@@ -4,7 +4,10 @@
   "private": true,
   "description": "Projeto PI Web",
   "scripts": {
-    "start": "node api/server.js"
+    "start": "node api/server.js",
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview"
   },
   "main": "index.js",
   "repository": {
@@ -22,6 +25,18 @@
   "dependencies": {
     "cors": "^2.8.6",
     "express": "^5.2.1",
-    "sqlite3": "^6.0.1"
+    "sqlite3": "^6.0.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.5.1",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.7.2",
+    "vite": "^6.4.1"
   }
 }

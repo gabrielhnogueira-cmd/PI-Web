@@ -8,7 +8,7 @@ O projeto busca facilitar o acesso dos clientes às informações sobre as peça
 
 A proposta do projeto é desenvolver uma aplicação web para a Cerâmica Gramanse, reunindo informações institucionais e uma apresentação organizada de seus produtos.
 
-Atualmente, o projeto conta com uma estrutura inicial de interface desenvolvida utilizando tecnologias básicas para desenvolvimento web. A aplicação apresenta informações sobre a empresa, seus segmentos de atuação, seus produtos e formas de contato.
+Atualmente, o projeto conta com uma interface inicial em React, TypeScript e Tailwind CSS. A aplicação apresenta informações sobre a empresa, seus segmentos de atuação, produtos simulados e formas de contato.
 
 Os principais segmentos apresentados na interface atual são:
 
@@ -36,55 +36,50 @@ As funcionalidades e tecnologias do projeto serão desenvolvidas e ampliadas con
 
 ## Tecnologias utilizadas
 
-Atualmente, o projeto utiliza:
-
-* HTML;
-* CSS;
-* JavaScript.
-
-Novas tecnologias poderão ser incorporadas conforme as necessidades e a evolução do projeto.
+O front-end utiliza React, TypeScript, Vite e Tailwind CSS. O servidor da API existente utiliza Node.js e Express, com SQLite para persistência.
 
 ## Estrutura
 
 ```text
 PI-Web/
-│
-├── assets/
-│   └── images/
-│
-├── css/
-│   └── style.css
-│
-├── js/
-│   └── script.js
-│
-├── index.html
-│
-└── README.md
+├── api/                    # Servidor Express e rotas da API
+├── assets/images/          # Imagens locais da interface
+├── src/
+│   ├── components/         # Componentes React reutilizáveis
+│   ├── data/catalog.ts     # Tipos e dados simulados do catálogo
+│   ├── App.tsx             # Estado e composição da página
+│   ├── index.css           # Tailwind e estilos globais
+│   └── main.tsx            # Entrada React
+├── index.html              # Documento de entrada do Vite
+├── tailwind.config.js
+├── tsconfig.json
+└── vite.config.ts
 ```
 
-* `index.html`: estrutura e conteúdo principal da página.
-* `css/style.css`: estilos, cores, tipografia e responsividade da interface.
-* `js/script.js`: interações e comportamentos da página.
-* `assets/images/`: imagens e recursos visuais utilizados no projeto.
+Os produtos apresentados são dados simulados. O formulário de orçamento demonstra o fluxo visual e ainda não envia informações para a API.
 
 ## Como iniciar
 
-Para executar a versão atual do projeto, basta clonar o repositório:
+Instale as dependências do projeto:
 
 ```bash
-git clone https://github.com/gabrielhnogueira-cmd/PI-Web.git
+npm install
 ```
 
-Em seguida, acesse a pasta do projeto:
+Inicie a interface React com Vite:
 
 ```bash
-cd PI-Web
+npm run dev
 ```
 
-Abra o arquivo `index.html` em um navegador.
+Para verificar a versão de produção:
 
-Para uma melhor experiência durante o desenvolvimento, é recomendado utilizar a extensão **Live Server** do Visual Studio Code.
+```bash
+npm run build
+npm run preview
+```
+
+O servidor da API continua disponível pelo comando `npm start`.
 
 ## Próximos passos
 
@@ -101,6 +96,6 @@ Entre os objetivos futuros do projeto estão:
 
 ## Status do projeto
 
-O projeto encontra-se atualmente em desenvolvimento, com uma base inicial da interface web já implementada.
+O projeto encontra-se em desenvolvimento. A interface inicial em React já contempla navegação responsiva, filtro de produtos simulados e formulário demonstrativo de orçamento.
 
 As funcionalidades serão adicionadas progressivamente conforme o desenvolvimento do projeto.
