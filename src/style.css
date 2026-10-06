@@ -3,143 +3,43 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: dark;
-  font-family: Georgia, "Times New Roman", serif;
+  color-scheme: light;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
-html {
-  scroll-behavior: smooth;
-  scroll-padding-top: 5rem;
-}
+html { scroll-behavior: smooth; scroll-padding-top: 5rem; }
 
 body {
   min-width: 320px;
   margin: 0;
-  background-color: #11110f;
-  background-image: linear-gradient(rgba(255, 255, 255, 0.028) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.028) 1px, transparent 1px);
-  background-size: 56px 56px;
+  background: #e7e7e3;
+  color: #1b1d1f;
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
 }
 
-button,
-input,
-select,
-textarea {
-  font: inherit;
-}
+button, input, select, textarea { font: inherit; }
+button { cursor: pointer; }
 
-button,
-select {
-  cursor: pointer;
-}
+:focus-visible { outline: 2px solid #a8461a; outline-offset: 3px; }
+.on-dark :focus-visible { outline-color: #e86e32; }
 
-button:focus-visible,
-a:focus-visible,
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible {
-  outline: 2px solid #e86e32;
-  outline-offset: 3px;
-}
-
-.eyebrow {
-  margin: 0 0 1.1rem;
-  color: #e86e32;
-  font-family: "Arial Narrow", "Trebuchet MS", sans-serif;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-}
-
-.section-title {
-  margin: 0;
-  font-family: "Arial Narrow", "Trebuchet MS", sans-serif;
-  font-size: clamp(2.1rem, 5vw, 4.1rem);
-  font-weight: 700;
-  line-height: 0.95;
-  text-transform: uppercase;
-}
-
-.section-title em {
-  color: #e86e32;
-  font-family: Georgia, "Times New Roman", serif;
-  font-weight: 400;
-  text-transform: none;
-}
-
-.action-button {
-  display: inline-flex;
-  min-height: 3rem;
-  align-items: center;
-  justify-content: center;
-  gap: 0.7rem;
-  border: 1px solid #e86e32;
-  padding: 0.8rem 1.1rem;
-  background: #e86e32;
-  color: #17120e;
-  font-family: "Arial Narrow", "Trebuchet MS", sans-serif;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  transition: background-color 160ms ease, color 160ms ease;
-}
-
-.action-button:hover {
-  background: transparent;
-  color: #e86e32;
-}
-
-.form-label {
-  display: grid;
-  gap: 0.45rem;
-  color: #aaa69d;
-  font-family: "Arial Narrow", "Trebuchet MS", sans-serif;
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-.form-control {
-  width: 100%;
-  min-height: 2.8rem;
-  border: 1px solid #393833;
-  border-radius: 0;
-  padding: 0.7rem 0.8rem;
-  background: #1b1b18;
-  color: #f0ede6;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 0.9rem;
-  font-weight: 400;
-  letter-spacing: 0;
-  text-transform: none;
-}
-
-.form-control::placeholder {
-  color: #77736b;
-}
-
-.animate-rise {
-  animation: rise-in 550ms ease-out both;
-}
-
-@keyframes rise-in {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
+@layer components {
+  .btn { @apply inline-flex min-h-11 items-center justify-center rounded-full px-6 py-2.5 text-sm font-semibold transition-colors; }
+  .btn-dark { @apply btn bg-carvao text-fundo hover:bg-ink; }
+  .btn-copper { @apply btn bg-copper text-ink hover:bg-[#f08149]; }
+  .block-title { @apply font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl; }
+  .form-label { @apply grid gap-1.5 text-sm font-semibold text-ink; }
+  .form-control { @apply min-h-11 w-full rounded-bloco border border-edge bg-white px-3 py-2 text-base font-normal text-ink placeholder:text-soft; }
+  /* Faixas que se sobrepõem com topo curvo: substituem os blocos quadrados */
+  .sheet { @apply relative -mt-10 rounded-t-[2.5rem] sm:-mt-14 sm:rounded-t-[4rem]; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  *, *::before, *::after {
     scroll-behavior: auto !important;
     animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
 }

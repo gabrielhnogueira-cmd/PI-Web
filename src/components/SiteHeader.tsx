@@ -1,67 +1,56 @@
 import { useState } from "react";
+import { Link } from "../lib/router";
+import type { User } from "../services/types";
 
 interface SiteHeaderProps {
+  path: string;
+  user: User | null;
+  cartCount: number;
   onRequest: () => void;
 }
 
 const navigation = [
-  { href: "#inicio", label: "Início" },
-  { href: "#solucoes", label: "Produtos" },
-  { href: "#empresa", label: "A empresa" },
-  { href: "#contato", label: "Contato" },
+  { to: "/", label: "Início" },
+  { to: "/loja", label: "Loja" },
+  { to: "/empresa", label: "Empresa" },
+  { to: "/suporte", label: "Suporte" },
 ];
 
-export default function SiteHeader({ onRequest }: SiteHeaderProps) {
+export default function SiteHeader({ path, user, cartCount, onRequest }: SiteHeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
-
   const closeMenu = () => setMenuOpen(false);
+  const linkClass = "flex min-h-11 items-center text-sm font-semibold text-soft transition-colors hover:text-copper-deep aria-[current=page]:text-ink";
 
   return (
-    <header className="sticky top-0 z-30 border-b border-line bg-white shadow-md">
+    <header className="sticky top-0 z-30 border-b border-edge/40 bg-fundo">
       <nav className="mx-auto flex min-h-16 w-[min(100%-2rem,1160px)] items-center justify-between gap-5" aria-label="Navegação principal">
-        <a className="flex shrink-0 items-center gap-2 text-ink no-underline" href="#inicio" onClick={closeMenu}>
+        <Link className="flex shrink-0 items-center gap-3 text-ink" to="/" onClick={closeMenu}>
           <img className="h-11 w-11 object-contain" src="/assets/images/image-Photoroom.png" alt="" />
-          <span className="flex flex-col font-display text-[0.92rem] font-bold leading-none">
-            CERÂMICA GRAMANSE
-            <small className="mt-1.5 font-display text-[0.55rem] tracking-[0.16em] text-copper">REFRATÁRIOS TÉCNICOS</small>
+          <span className="flex flex-col leading-tight">
+            <span className="font-display text-lg font-bold">Cerâmica Gramanse</span>
+            <span className="text-xs text-soft">Refratários técnicos</span>
           </span>
-        </a>
+        </Link>
 
-        <button
-          className="grid h-10 w-10 place-items-center text-ink md:hidden"
-          type="button"
-          aria-label={menuOpen ? "Fechar menu" : "Abrir menu"}
-          aria-expanded={menuOpen}
-          onClick={() => setMenuOpen((open) => !open)}
-        >
+        <button className="grid h-11 w-11 place-items-center text-ink md:hidden" type="button" aria-label={menuOpen ? "Fechar menu" : "Abrir menu"} aria-expanded={menuOpen} onClick={() => setMenuOpen((open) => !open)}>
           <span className="flex w-5 flex-col gap-1" aria-hidden="true">
-            <span className={`h-0.5 w-full bg-current transition-transform ${menuOpen ? "translate-y-[3px] rotate-45" : ""}`} />
+            <span className={`h-0.5 w-full bg-current transition-transform ${menuOpen ? "translate-y-[6px] rotate-45" : ""}`} />
             <span className={`h-0.5 w-full bg-current transition-opacity ${menuOpen ? "opacity-0" : ""}`} />
-            <span className={`h-0.5 w-full bg-current transition-transform ${menuOpen ? "-translate-y-[7px] -rotate-45" : ""}`} />
+            <span className={`h-0.5 w-full bg-current transition-transform ${menuOpen ? "-translate-y-[6px] -rotate-45" : ""}`} />
           </span>
         </button>
 
-        <div className={`${menuOpen ? "flex" : "hidden"} absolute left-0 right-0 top-full flex-col gap-5 border-b border-line bg-white px-6 py-6 shadow-md md:static md:flex md:flex-row md:items-center md:gap-8 md:border-0 md:bg-transparent md:p-0 md:shadow-none`}>
+        <div className={`${menuOpen ? "flex" : "hidden"} absolute left-0 right-0 top-full flex-col gap-1 border-b border-edge/40 bg-fundo px-4 py-4 md:static md:flex md:flex-row md:items-center md:gap-6 md:border-0 md:bg-transparent md:p-0`}>
           {navigation.map((item) => (
-            <a
-              key={item.href}
-              className="font-display text-xs uppercase tracking-[0.1em] text-[#55534f] no-underline transition-colors hover:text-copper"
-              href={item.href}
-              onClick={closeMenu}
-            >
-              {item.label}
-            </a>
+            <Link key={item.to} className={linkClass} to={item.to} aria-current={path === item.to ? "page" : undefined} onClick={closeMenu}>{item.label}</Link>
           ))}
-          <button
-            className="min-h-10 bg-copper px-4 font-display text-[0.68rem] font-bold uppercase tracking-[0.1em] text-white transition-colors hover:bg-[#c95620]"
-            type="button"
-            onClick={() => {
-              closeMenu();
-              onRequest();
-            }}
-          >
-            Solicitar orçamento <span aria-hidden="true">↗</span>
-          </button>
+          <Link className={linkClass} to={user ? "/conta" : "/entrar"} aria-current={path === "/conta" || path === "/entrar" ? "page" : undefined} onClick={closeMenu}>
+            {user ? user.name.split(" ")[0] : "Entrar"}
+          </Link>
+          <Link className={linkClass} to="/loja" onClick={closeMenu}>
+            <span aria-live="polite">Pedido{cartCount > 0 ? ` (${cartCount})` : ""}</span>
+          </Link>
+          <button className="btn-dark" type="button" onClick={() => { closeMenu(); onRequest(); }}>Solicitar orçamento</button>
         </div>
       </nav>
     </header>

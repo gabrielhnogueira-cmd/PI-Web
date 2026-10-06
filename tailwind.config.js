@@ -3,16 +3,19 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        ink: "#11110f",
-        panel: "#1b1b18",
-        paper: "#f0ede6",
-        muted: "#aaa69d",
+        fundo: "#e7e7e3",
+        carvao: "#26292c",
+        chamote: "#d3cbbd",
         copper: "#e86e32",
-        line: "#393833",
+        "copper-deep": "#a8461a",
+        ink: "#1b1d1f",
+        soft: "#52565a",
+        edge: "#7a7e82",
       },
+      borderRadius: { bloco: "6px" },
       fontFamily: {
-        display: ["Arial Narrow", "Trebuchet MS", "sans-serif"],
-        editorial: ["Georgia", "Times New Roman", "serif"],
+        sans: ['"IBM Plex Sans"', "system-ui", "sans-serif"],
+        display: ['"IBM Plex Sans Condensed"', "system-ui", "sans-serif"],
       },
     },
   },
