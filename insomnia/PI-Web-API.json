@@ -1,0 +1,114 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2026-10-06T12:00:00.000Z",
+  "__export_source": "insomnia.desktop.app:v10.0.0",
+  "resources": [
+    {
+      "_id": "wrk_pi_web_api",
+      "_type": "workspace",
+      "name": "PI-Web API",
+      "description": "CRUD de produtos com Express e SQLite"
+    },
+    {
+      "_id": "env_pi_web_api",
+      "_type": "environment",
+      "parentId": "wrk_pi_web_api",
+      "name": "Base Environment",
+      "data": {
+        "base_url": "http://localhost:3000",
+        "produto_id": "1"
+      }
+    },
+    {
+      "_id": "req_health",
+      "_type": "request",
+      "parentId": "wrk_pi_web_api",
+      "name": "Health e conexão SQLite",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/health",
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "scripts": {
+        "afterResponse": "insomnia.test('API e SQLite disponíveis', function () {\n  insomnia.expect(insomnia.response.code).to.eql(200);\n  insomnia.expect(insomnia.response.json().database).to.eql('connected');\n});"
+      }
+    },
+    {
+      "_id": "req_list_products",
+      "_type": "request",
+      "parentId": "wrk_pi_web_api",
+      "name": "Listar produtos (GET)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/produtos",
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "scripts": {
+        "afterResponse": "insomnia.test('Lista de produtos retornada', function () {\n  insomnia.expect(insomnia.response.code).to.eql(200);\n  insomnia.expect(insomnia.response.json()).to.be.an('array');\n});"
+      }
+    },
+    {
+      "_id": "req_create_product",
+      "_type": "request",
+      "parentId": "wrk_pi_web_api",
+      "name": "Criar produto (POST)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/produtos",
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Cadinho de laboratório\",\n  \"segmentId\": \"laboratorio\",\n  \"material\": \"Porcelana de alta alumina\",\n  \"description\": \"Recipiente para análise em laboratório.\",\n  \"price\": 15.9\n}"
+      },
+      "parameters": [],
+      "scripts": {
+        "afterResponse": "insomnia.test('Produto criado', function () {\n  insomnia.expect(insomnia.response.code).to.eql(201);\n  insomnia.expect(insomnia.response.json().id).to.be.a('number');\n});\ninsomnia.environment.set('produto_id', String(insomnia.response.json().id));"
+      }
+    },
+    {
+      "_id": "req_get_product",
+      "_type": "request",
+      "parentId": "wrk_pi_web_api",
+      "name": "Consultar produto (GET por ID)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/produtos/{{ _.produto_id }}",
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "scripts": {
+        "afterResponse": "insomnia.test('Produto consultado', function () {\n  insomnia.expect(insomnia.response.code).to.eql(200);\n  insomnia.expect(insomnia.response.json().id).to.be.a('number');\n});"
+      }
+    },
+    {
+      "_id": "req_update_product",
+      "_type": "request",
+      "parentId": "wrk_pi_web_api",
+      "name": "Atualizar produto (PUT)",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/api/produtos/{{ _.produto_id }}",
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Cadinho de laboratório atualizado\",\n  \"segmentId\": \"laboratorio\",\n  \"material\": \"Alumina\",\n  \"description\": \"Dados revisados pelo teste PUT.\",\n  \"price\": 18.5\n}"
+      },
+      "parameters": [],
+      "scripts": {
+        "afterResponse": "insomnia.test('Produto atualizado', function () {\n  insomnia.expect(insomnia.response.code).to.eql(200);\n  insomnia.expect(insomnia.response.json().name).to.include('atualizado');\n});"
+      }
+    },
+    {
+      "_id": "req_delete_product",
+      "_type": "request",
+      "parentId": "wrk_pi_web_api",
+      "name": "Excluir produto (DELETE)",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/api/produtos/{{ _.produto_id }}",
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "scripts": {
+        "afterResponse": "insomnia.test('Produto excluído', function () {\n  insomnia.expect(insomnia.response.code).to.eql(204);\n});"
+      }
+    }
+  ]
+}

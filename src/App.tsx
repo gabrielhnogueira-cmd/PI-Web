@@ -70,7 +70,7 @@ export default function App({ services }: AppProps) {
 
   return (
     <div className="min-h-screen overflow-x-clip">
-      <SiteHeader user={user} cartCount={cartCount} onRequest={() => openRequest()} />
+      <SiteHeader path={path} user={user} cartCount={cartCount} onRequest={() => openRequest()} />
       <main>{page}</main>
       <SiteFooter />
       {requestOpen && <RequestDialog initialProduct={requestProduct} onClose={() => setRequestOpen(false)} />}

@@ -36,7 +36,7 @@ As funcionalidades e tecnologias do projeto serão desenvolvidas e ampliadas con
 
 ## Tecnologias utilizadas
 
-O front-end utiliza React, TypeScript, Vite e Tailwind CSS. O servidor da API existente utiliza Node.js e Express, com SQLite para persistência.
+O front-end utiliza React, TypeScript, Vite e Tailwind CSS. A API utiliza Node.js 22, Express e SQLite (`sqlite3` 5.1.7), compatível com a imagem Linux do Azure App Service.
 
 ## Estrutura
 
@@ -80,6 +80,35 @@ npm run preview
 ```
 
 O servidor da API continua disponível pelo comando `npm start`.
+
+## API e testes
+
+A API Express oferece CRUD de produtos em `/api/produtos` e verificação da conexão SQLite em `/api/health`. Na primeira inicialização, a tabela é criada e recebe dados de demonstração caso esteja vazia. O caminho do banco pode ser configurado pela variável `DB_PATH`.
+
+```bash
+npm start
+```
+
+Em outro terminal, execute o ciclo CRUD automatizado:
+
+```bash
+npm run test:api
+```
+
+Para demonstrar as requisições no Insomnia, importe `insomnia/PI-Web-API.json`, execute Health, Listar, Criar, Consultar, Atualizar e Excluir nessa ordem. A resposta da criação salva o ID no ambiente para as requisições seguintes.
+
+| Método | Rota | Resultado |
+| --- | --- | --- |
+| GET | `/api/health` | Estado da API e do SQLite |
+| GET | `/api/produtos` | Lista produtos |
+| GET | `/api/produtos/:id` | Consulta um produto |
+| POST | `/api/produtos` | Cria produto (`201`) |
+| PUT | `/api/produtos/:id` | Atualiza todos os campos editáveis |
+| DELETE | `/api/produtos/:id` | Exclui produto (`204`) |
+
+API publicada no Azure App Service (plano B1, Brazil South): [pi-web-gramanse-api-2026.azurewebsites.net](https://pi-web-gramanse-api-2026-dagge8hbemava7bu.brazilsouth-01.azurewebsites.net). A verificação `/api/health` confirma a conexão SQLite; o CRUD foi exercitado remotamente. O custo estimado pelo portal é US$ 14,60/mês enquanto o plano estiver ativo.
+
+Os detalhes do deploy, persistência do banco e captura de logs estão em [docs/azure-app-service.md](docs/azure-app-service.md).
 
 ## Próximos passos
 
