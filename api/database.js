@@ -69,6 +69,32 @@ async function initializeDatabase(db, { seed = true, log = true, filename = defa
 			updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 		)
 	`);
+	await run(db, `
+		CREATE TRIGGER IF NOT EXISTS produtos_validar_insert
+		BEFORE INSERT ON produtos
+		WHEN
+			length(trim(NEW.name)) = 0 OR length(NEW.name) > 120 OR
+			NEW.segment_id NOT IN ('fundicao', 'laboratorio', 'analise', 'aquario') OR
+			length(trim(NEW.material)) = 0 OR length(NEW.material) > 100 OR
+			length(trim(NEW.description)) = 0 OR length(NEW.description) > 500 OR
+			(NEW.price IS NOT NULL AND (NEW.price < 0 OR round(NEW.price, 2) != NEW.price))
+		BEGIN
+			SELECT RAISE(ABORT, 'Dados do produto inválidos');
+		END
+	`);
+	await run(db, `
+		CREATE TRIGGER IF NOT EXISTS produtos_validar_update
+		BEFORE UPDATE ON produtos
+		WHEN
+			length(trim(NEW.name)) = 0 OR length(NEW.name) > 120 OR
+			NEW.segment_id NOT IN ('fundicao', 'laboratorio', 'analise', 'aquario') OR
+			length(trim(NEW.material)) = 0 OR length(NEW.material) > 100 OR
+			length(trim(NEW.description)) = 0 OR length(NEW.description) > 500 OR
+			(NEW.price IS NOT NULL AND (NEW.price < 0 OR round(NEW.price, 2) != NEW.price))
+		BEGIN
+			SELECT RAISE(ABORT, 'Dados do produto inválidos');
+		END
+	`);
 
 	if (seed) {
 		const result = await get(db, 'SELECT COUNT(*) AS total FROM produtos');

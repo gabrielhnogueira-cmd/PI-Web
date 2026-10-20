@@ -95,7 +95,7 @@ Em outro terminal, execute o ciclo CRUD automatizado:
 npm run test:api
 ```
 
-Para demonstrar as requisições no Insomnia, importe `insomnia/PI-Web-API.json`, execute Health, Listar, Criar, Consultar, Atualizar e Excluir nessa ordem. A resposta da criação salva o ID no ambiente para as requisições seguintes.
+Para demonstrar as requisições no Insomnia, importe `insomnia/PI-Web-API.json` e selecione `Base Environment` com `base_url=http://localhost:3000`. Execute Health, Listar, Criar, Consultar, Atualizar e Excluir nessa ordem; a resposta da criação salva o ID para as próximas requisições. Depois execute os requests negativos para conferir validação de campos, segmento, preço, JSON e IDs (`400`/`404`).
 
 | Método | Rota | Resultado |
 | --- | --- | --- |
@@ -109,6 +109,8 @@ Para demonstrar as requisições no Insomnia, importe `insomnia/PI-Web-API.json`
 API publicada no Azure App Service (plano B1, Brazil South): [pi-web-gramanse-api-2026.azurewebsites.net](https://pi-web-gramanse-api-2026-dagge8hbemava7bu.brazilsouth-01.azurewebsites.net). A verificação `/api/health` confirma a conexão SQLite; o CRUD foi exercitado remotamente. O custo estimado pelo portal é US$ 14,60/mês enquanto o plano estiver ativo.
 
 Os detalhes do deploy, persistência do banco e captura de logs estão em [docs/azure-app-service.md](docs/azure-app-service.md).
+
+As regras de normalização, validação, tratamento de inconsistências e o fluxo entre Insomnia, Express e SQLite estão documentados em [docs/qualidade-dados.md](docs/qualidade-dados.md). O front-end ainda usa dados simulados; essa fronteira está indicada no documento.
 
 ## Próximos passos
 

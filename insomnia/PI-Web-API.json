@@ -58,11 +58,11 @@
       "headers": [{ "name": "Content-Type", "value": "application/json" }],
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"name\": \"Cadinho de laboratório\",\n  \"segmentId\": \"laboratorio\",\n  \"material\": \"Porcelana de alta alumina\",\n  \"description\": \"Recipiente para análise em laboratório.\",\n  \"price\": 15.9\n}"
+        "text": "{\n  \"name\": \"  Cadinho   de laboratório  \",\n  \"segmentId\": \" LABORATORIO \",\n  \"material\": \" Porcelana   de alta alumina \",\n  \"description\": \" Recipiente para análise em laboratório. \",\n  \"price\": \"15,90\"\n}"
       },
       "parameters": [],
       "scripts": {
-        "afterResponse": "insomnia.test('Produto criado', function () {\n  insomnia.expect(insomnia.response.code).to.eql(201);\n  insomnia.expect(insomnia.response.json().id).to.be.a('number');\n});\ninsomnia.environment.set('produto_id', String(insomnia.response.json().id));"
+        "afterResponse": "insomnia.test('Produto normalizado e criado', function () {\n  const product = insomnia.response.json();\n  insomnia.expect(insomnia.response.code).to.eql(201);\n  insomnia.expect(product.id).to.be.a('number');\n  insomnia.expect(product.name).to.eql('Cadinho de laboratório');\n  insomnia.expect(product.segmentId).to.eql('laboratorio');\n  insomnia.expect(product.material).to.eql('Porcelana de alta alumina');\n  insomnia.expect(product.description).to.eql('Recipiente para análise em laboratório.');\n  insomnia.expect(product.price).to.eql(15.9);\n});\nif (insomnia.response.code === 201) insomnia.environment.set('produto_id', String(insomnia.response.json().id));"
       }
     },
     {
@@ -108,6 +108,102 @@
       "parameters": [],
       "scripts": {
         "afterResponse": "insomnia.test('Produto excluído', function () {\n  insomnia.expect(insomnia.response.code).to.eql(204);\n});"
+      }
+    },
+    {
+      "_id": "req_invalid_product",
+      "_type": "request",
+      "parentId": "wrk_pi_web_api",
+      "name": "Validar campos obrigatórios (POST 400)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/produtos",
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Produto incompleto\"\n}"
+      },
+      "parameters": [],
+      "scripts": {
+        "afterResponse": "insomnia.test('Payload incompleto rejeitado', function () {\n  const response = insomnia.response.json();\n  insomnia.expect(insomnia.response.code).to.eql(400);\n  insomnia.expect(response.erro).to.be.a('string');\n  insomnia.expect(response.campos).to.have.property('name');\n  insomnia.expect(response.campos).to.have.property('segmentId');\n});"
+      }
+    },
+    {
+      "_id": "req_invalid_segment",
+      "_type": "request",
+      "parentId": "wrk_pi_web_api",
+      "name": "Validar segmento não cadastrado (POST 400)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/produtos",
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Produto de teste\",\n  \"segmentId\": \"outro\",\n  \"material\": \"Alumina\",\n  \"description\": \"Teste de segmento inválido.\",\n  \"price\": null\n}"
+      },
+      "parameters": [],
+      "scripts": {
+        "afterResponse": "insomnia.test('Segmento inválido rejeitado', function () {\n  insomnia.expect(insomnia.response.code).to.eql(400);\n  insomnia.expect(insomnia.response.json().campos).to.have.property('segmentId');\n});"
+      }
+    },
+    {
+      "_id": "req_invalid_price",
+      "_type": "request",
+      "parentId": "wrk_pi_web_api",
+      "name": "Validar preço com mais de duas casas (POST 400)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/produtos",
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Produto de teste\",\n  \"segmentId\": \"laboratorio\",\n  \"material\": \"Alumina\",\n  \"description\": \"Teste de precisão monetária.\",\n  \"price\": 1.234\n}"
+      },
+      "parameters": [],
+      "scripts": {
+        "afterResponse": "insomnia.test('Preço inválido rejeitado', function () {\n  insomnia.expect(insomnia.response.code).to.eql(400);\n  insomnia.expect(insomnia.response.json().campos).to.have.property('price');\n});"
+      }
+    },
+    {
+      "_id": "req_invalid_json",
+      "_type": "request",
+      "parentId": "wrk_pi_web_api",
+      "name": "Validar JSON malformado (POST 400)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/produtos",
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\"name\":"
+      },
+      "parameters": [],
+      "scripts": {
+        "afterResponse": "insomnia.test('JSON malformado rejeitado', function () {\n  insomnia.expect(insomnia.response.code).to.eql(400);\n  insomnia.expect(insomnia.response.json().erro).to.eql('JSON inválido.');\n});"
+      }
+    },
+    {
+      "_id": "req_invalid_product_id",
+      "_type": "request",
+      "parentId": "wrk_pi_web_api",
+      "name": "Validar ID malformado (GET 400)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/produtos/abc",
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "scripts": {
+        "afterResponse": "insomnia.test('ID malformado rejeitado', function () {\n  insomnia.expect(insomnia.response.code).to.eql(400);\n});"
+      }
+    },
+    {
+      "_id": "req_missing_product",
+      "_type": "request",
+      "parentId": "wrk_pi_web_api",
+      "name": "Consultar ID inexistente (GET 404)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/produtos/999999999",
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "scripts": {
+        "afterResponse": "insomnia.test('Produto ausente retorna 404', function () {\n  insomnia.expect(insomnia.response.code).to.eql(404);\n  insomnia.expect(insomnia.response.json().erro).to.include('não encontrado');\n});"
       }
     }
   ]

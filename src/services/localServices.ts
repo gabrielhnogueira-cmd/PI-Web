@@ -19,20 +19,10 @@ async function hash(text: string) {
 
 const publicUser = ({ id, name, email, role, company }: StoredUser): User => ({ id, name, email, role, company });
 
-// Conta de demonstração da equipe: e-mail equipe@gramanse.com.br / senha gramanse-demo
-const SEED = { id: "equipe-demo", name: "Equipe Gramanse", email: "equipe@gramanse.com.br", role: "equipe" as const };
-
 // ATENÇÃO: protótipo. Tudo fica no navegador (localStorage) e não é seguro.
 // Autenticação real precisa de servidor.
 export function createLocalServices(): Services {
-  const allUsers = async () => {
-    const list = read<StoredUser[]>(KEYS.users, []);
-    if (!list.some((u) => u.id === SEED.id)) {
-      list.push({ ...SEED, passHash: await hash("gramanse-demo") });
-      write(KEYS.users, list);
-    }
-    return list;
-  };
+  const allUsers = async () => read<StoredUser[]>(KEYS.users, []).filter((user) => user.id !== "equipe-demo");
 
   return {
     account: {

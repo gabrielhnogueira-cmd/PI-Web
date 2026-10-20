@@ -32,6 +32,9 @@ function createApp(db) {
     if (error.type === 'entity.parse.failed') {
       return response.status(400).json({ erro: 'JSON inválido.' });
     }
+    if (error.code?.startsWith('SQLITE_CONSTRAINT')) {
+      return response.status(400).json({ erro: 'Dados incompatíveis com as regras do banco.' });
+    }
     console.error(`[api] ${error.message}`);
     response.status(500).json({ erro: 'Erro interno da API.' });
   });

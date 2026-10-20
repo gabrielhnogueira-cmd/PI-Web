@@ -1,7 +1,7 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const { createApp } = require('../app');
-const { closeDatabase, initializeDatabase, openDatabase } = require('../database');
+const { closeDatabase, initializeDatabase, openDatabase, run } = require('../database');
 
 test('API de produtos executa o ciclo CRUD e valida os dados', async (context) => {
   const db = openDatabase(':memory:');
@@ -27,16 +27,19 @@ test('API de produtos executa o ciclo CRUD e valida os dados', async (context) =
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      name: 'Cadinho de teste',
-      segmentId: 'laboratorio',
-      material: 'Porcelana de alta alumina',
-      description: 'Peça criada no teste da API.',
-      price: 12.5,
+      name: '  Cadinho   de teste ',
+      segmentId: ' LABORATORIO ',
+      material: ' Porcelana   de alta alumina ',
+      description: ' Peça criada no teste da API. ',
+      price: ' 12.50 ',
     }),
   });
   assert.equal(createResponse.status, 201);
   const created = await createResponse.json();
   assert.equal(created.name, 'Cadinho de teste');
+  assert.equal(created.segmentId, 'laboratorio');
+  assert.equal(created.material, 'Porcelana de alta alumina');
+  assert.equal(created.description, 'Peça criada no teste da API.');
   assert.equal(created.price, 12.5);
   assert.equal(createResponse.headers.get('location'), `/api/produtos/${created.id}`);
 
@@ -58,12 +61,56 @@ test('API de produtos executa o ciclo CRUD e valida os dados', async (context) =
   assert.equal(updateResponse.status, 200);
   assert.equal((await updateResponse.json()).name, 'Cadinho atualizado');
 
-  const invalidResponse = await fetch(`${baseUrl}/api/produtos`, {
+  const validFields = {
+    name: 'Produto para rejeitar',
+    segmentId: 'laboratorio',
+    material: 'Alumina',
+    description: 'Produto temporário de validação.',
+    price: null,
+  };
+  const invalidCases = [
+    { ...validFields, name: '   ' },
+    { ...validFields, name: 'x'.repeat(121) },
+    { ...validFields, segmentId: null },
+    { ...validFields, segmentId: 'segmento-inexistente' },
+    { ...validFields, price: '' },
+    { ...validFields, price: 'não-numérico' },
+    { ...validFields, price: -1 },
+    { ...validFields, price: 1.234 },
+  ];
+  for (const invalidProduct of invalidCases) {
+    const invalidResponse = await fetch(`${baseUrl}/api/produtos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(invalidProduct),
+    });
+    assert.equal(invalidResponse.status, 400);
+    assert.equal(typeof (await invalidResponse.json()).erro, 'string');
+  }
+  const productsAfterRejections = await (await fetch(`${baseUrl}/api/produtos`)).json();
+  assert.equal(productsAfterRejections.length, 1);
+
+  const malformedJsonResponse = await fetch(`${baseUrl}/api/produtos`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name: 'Produto sem segmento' }),
+    body: '{"name":',
   });
-  assert.equal(invalidResponse.status, 400);
+  assert.equal(malformedJsonResponse.status, 400);
+  assert.equal((await malformedJsonResponse.json()).erro, 'JSON inválido.');
+
+  await assert.rejects(run(db, `
+    INSERT INTO produtos (name, segment_id, material, description, price)
+    VALUES (?, ?, ?, ?, ?)
+  `, ['Produto inválido', 'segmento-inexistente', 'Alumina', 'Teste de trigger', null]), /Dados do produto inválidos/);
+
+  const invalidUpdateResponse = await fetch(`${baseUrl}/api/produtos/${created.id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...validFields, price: -1 }),
+  });
+  assert.equal(invalidUpdateResponse.status, 400);
+  const unchangedResponse = await fetch(`${baseUrl}/api/produtos/${created.id}`);
+  assert.equal((await unchangedResponse.json()).name, 'Cadinho atualizado');
 
   const deleteResponse = await fetch(`${baseUrl}/api/produtos/${created.id}`, { method: 'DELETE' });
   assert.equal(deleteResponse.status, 204);
