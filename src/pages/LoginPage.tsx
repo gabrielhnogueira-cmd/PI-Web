@@ -45,6 +45,7 @@ export default function LoginPage({ account, hasCart, onAuth }: LoginPageProps) 
         Ainda não tem conta? <Link className="font-semibold text-ink underline underline-offset-4" to="/cadastro">Criar conta</Link>.{" "}
         Esqueceu a senha? <Link className="font-semibold text-ink underline underline-offset-4" to="/suporte">Fale com o suporte</Link>.
       </p>
+      <p className="mb-0 mt-4 text-sm text-soft">É da equipe? <Link className="font-semibold text-ink underline underline-offset-4" to="/admin/entrar">Acesso administrativo</Link>.</p>
     </AuthLayout>
   );
 }

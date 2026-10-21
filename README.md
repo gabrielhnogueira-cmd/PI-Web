@@ -56,7 +56,16 @@ PI-Web/
 └── vite.config.ts
 ```
 
-Os produtos apresentados são dados simulados. O formulário de orçamento demonstra o fluxo visual e ainda não envia informações para a API.
+Os produtos apresentados na interface são dados de demonstração. O catálogo editado no painel administrativo fica salvo no `localStorage` do navegador; ele ainda não é sincronizado com o CRUD de produtos da API. O formulário de orçamento demonstra o fluxo visual e ainda não envia informações para a API.
+
+## Painel administrativo demonstrativo
+
+Acesse `#/admin/entrar` ou use o link **Acesso administrativo** na tela de login:
+
+* E-mail: `equipe@gramanse.com`
+* Senha: `gramanse-demo-2026`
+
+O painel permite cadastrar, editar e excluir produtos e preços, consultar pedidos e chamados e alterar seus status. Neste protótipo, catálogo, usuários, pedidos e chamados são mantidos localmente no navegador. As credenciais demonstrativas ficam no código do front-end e **não fornecem segurança nem devem ser usadas em produção**. Um uso real exige autenticação e autorização no servidor, além de persistência centralizada.
 
 ## Como iniciar
 

@@ -37,7 +37,13 @@ export function createLocalServices(): Services {
         return publicUser(user);
       },
       async login({ email, password, role }) {
-        const found = (await allUsers()).find((u) => u.email === email.trim().toLowerCase() && u.role === role);
+        const normalizedEmail = email.trim().toLowerCase();
+        if (role === "equipe" && normalizedEmail === "equipe@gramanse.com" && password === "gramanse-demo-2026") {
+          const user: User = { id: "equipe-demo", name: "Equipe Gramanse", email: normalizedEmail, role: "equipe" };
+          write(KEYS.session, user);
+          return user;
+        }
+        const found = (await allUsers()).find((u) => u.email === normalizedEmail && u.role === role);
         if (!found || found.passHash !== (await hash(password))) throw new Error("E-mail ou senha não conferem.");
         write(KEYS.session, publicUser(found));
         return publicUser(found);
@@ -54,6 +60,15 @@ export function createLocalServices(): Services {
         const all = read<Order[]>(KEYS.orders, []);
         return user.role === "equipe" ? all : all.filter((o) => o.userId === user.id);
       },
+      async updateStatus(orderId, status) {
+        const all = read<Order[]>(KEYS.orders, []);
+        const index = all.findIndex((order) => order.id === orderId);
+        if (index < 0) throw new Error("Pedido não encontrado.");
+        const updated = { ...all[index], status };
+        all[index] = updated;
+        write(KEYS.orders, all);
+        return updated;
+      },
     },
     support: {
       async open(user, { subject, orderId, message }) {
@@ -64,6 +79,15 @@ export function createLocalServices(): Services {
       async list(user) {
         const all = read<Ticket[]>(KEYS.tickets, []);
         return user.role === "equipe" ? all : all.filter((t) => t.userId === user.id);
+      },
+      async updateStatus(ticketId, status) {
+        const all = read<Ticket[]>(KEYS.tickets, []);
+        const index = all.findIndex((ticket) => ticket.id === ticketId);
+        if (index < 0) throw new Error("Chamado não encontrado.");
+        const updated = { ...all[index], status };
+        all[index] = updated;
+        write(KEYS.tickets, all);
+        return updated;
       },
     },
   };

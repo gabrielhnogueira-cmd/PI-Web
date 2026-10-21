@@ -45,6 +45,7 @@ export default function AccountPage({ user, orders, support, onLogout }: Account
         </div>
         <button className="min-h-11 text-sm font-semibold underline underline-offset-4 hover:text-copper-deep" type="button" onClick={onLogout}>Sair</button>
       </div>
+      {team && <Link className="btn-dark mt-6 inline-flex" to="/admin">Abrir painel administrativo</Link>}
 
       <div className="mt-12 grid gap-14 lg:grid-cols-2">
         <section aria-labelledby="pedidos-title">

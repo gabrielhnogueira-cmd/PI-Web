@@ -5,10 +5,14 @@ import QuoteBlock from "./components/QuoteBlock";
 import RequestDialog from "./components/RequestDialog";
 import SiteFooter from "./components/SiteFooter";
 import SiteHeader from "./components/SiteHeader";
+import AdminLayout from "./components/AdminLayout";
 import SolutionsSection from "./components/SolutionsSection";
-import { products, segments } from "./data/catalog";
+import { products as initialProducts, segments } from "./data/catalog";
+import type { Product } from "./data/catalog";
 import { usePath, navigate } from "./lib/router";
 import AccountPage from "./pages/AccountPage";
+import AdminLoginPage from "./pages/AdminLoginPage";
+import AdminPage from "./pages/AdminPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import ShopPage from "./pages/ShopPage";
@@ -17,11 +21,22 @@ import type { CartLine, Services, User } from "./services/types";
 
 const CUSTOM_PART = "Peça técnica personalizada";
 const CART_KEY = "gramanse.cart";
+const PRODUCTS_KEY = "gramanse.products";
 
 interface AppProps { services: Services }
 
 export default function App({ services }: AppProps) {
   const path = usePath();
+  const [products, setProducts] = useState<Product[]>(() => {
+    try {
+      const saved = localStorage.getItem(PRODUCTS_KEY);
+      if (!saved) return initialProducts;
+      const parsed: unknown = JSON.parse(saved);
+      return Array.isArray(parsed) ? parsed as Product[] : initialProducts;
+    } catch {
+      return initialProducts;
+    }
+  });
   const [user, setUser] = useState<User | null>(() => services.account.current());
   const [cart, setCart] = useState<CartLine[]>(() => {
     try { return JSON.parse(localStorage.getItem(CART_KEY) ?? "[]") as CartLine[]; } catch { return []; }
@@ -31,6 +46,7 @@ export default function App({ services }: AppProps) {
   const [requestOpen, setRequestOpen] = useState(false);
 
   useEffect(() => localStorage.setItem(CART_KEY, JSON.stringify(cart)), [cart]);
+  useEffect(() => localStorage.setItem(PRODUCTS_KEY, JSON.stringify(products)), [products]);
   useEffect(() => {
     if (path === "/empresa") document.getElementById("empresa")?.scrollIntoView();
     else window.scrollTo(0, 0);
@@ -43,6 +59,11 @@ export default function App({ services }: AppProps) {
       : [...lines, { productId, qty: 1 }]);
   const setQty = (productId: number, qty: number) =>
     setCart((lines) => (qty <= 0 ? lines.filter((l) => l.productId !== productId) : lines.map((l) => (l.productId === productId ? { ...l, qty } : l))));
+  const changeProducts = (nextProducts: Product[]) => {
+    const availableIds = new Set(nextProducts.map((product) => product.id));
+    setProducts(nextProducts);
+    setCart((lines) => lines.filter((line) => availableIds.has(line.productId)));
+  };
   const logout = () => { services.account.logout(); setUser(null); navigate("/"); };
 
   const cartCount = cart.reduce((sum, line) => sum + line.qty, 0);
@@ -66,6 +87,19 @@ export default function App({ services }: AppProps) {
           <QuoteBlock onRequest={() => openRequest()} />
         </>
       );
+  }
+
+  if (path.startsWith("/admin")) {
+    return (
+      <AdminLayout
+        authenticated={user?.role === "equipe" && path === "/admin"}
+        onLogout={() => { services.account.logout(); setUser(null); navigate("/admin/entrar"); }}
+      >
+        {path === "/admin" && user?.role === "equipe"
+          ? <AdminPage user={user} products={products} onProductsChange={changeProducts} orders={services.orders} support={services.support} />
+          : <AdminLoginPage account={services.account} onAuth={setUser} />}
+      </AdminLayout>
+    );
   }
 
   return (

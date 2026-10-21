@@ -22,10 +22,12 @@ export interface AccountService {
 export interface OrderService {
   create(user: User, lines: OrderLine[], note?: string): Promise<Order>;
   list(user: User): Promise<Order[]>;
+  updateStatus(orderId: string, status: Order["status"]): Promise<Order>;
 }
 export interface SupportService {
   open(user: User, input: { subject: string; orderId?: string; message: string }): Promise<Ticket>;
   list(user: User): Promise<Ticket[]>;
+  updateStatus(ticketId: string, status: Ticket["status"]): Promise<Ticket>;
 }
 // Contrato único que as telas recebem por props (mesmo padrão do App). Hoje a
 // implementação é local; quando houver API, basta outra fábrica com esta interface.

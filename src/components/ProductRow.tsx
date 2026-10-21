@@ -20,7 +20,7 @@ export default function ProductRow({ product, onAdd, onQuote, dark = false, quan
       <div className="flex min-w-0 flex-col justify-center p-4 sm:px-6 sm:py-5">
         <div className="flex min-h-5 flex-wrap items-center justify-between gap-x-4 gap-y-1">
           <p className={`m-0 font-display text-[0.62rem] font-bold uppercase tracking-[0.12em] ${dark ? "text-copper" : "text-copper-deep"}`}>{product.material}</p>
-          {product.price !== undefined && <p className="m-0 text-sm font-semibold">{brl(product.price)}</p>}
+          <p className="m-0 text-sm font-semibold">{product.price === undefined ? "Sob consulta" : brl(product.price)}</p>
         </div>
         <h3 className="m-0 mt-1 min-h-[3.25rem] line-clamp-2 font-display text-xl font-bold leading-tight sm:text-2xl">{product.name}</h3>
         <p className={`m-0 mt-2 min-h-10 max-w-xl line-clamp-2 text-sm leading-relaxed ${dark ? "text-chamote" : "text-soft"}`}>{product.description}</p>
