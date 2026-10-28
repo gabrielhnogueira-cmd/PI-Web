@@ -1,5 +1,6 @@
 const express = require('express');
 const { all, get, run } = require('../database');
+const { requireAuth } = require('../auth');
 
 const segmentIds = new Set(['fundicao', 'laboratorio', 'analise', 'aquario']);
 const fieldLimits = { name: 120, material: 100, description: 500 };
@@ -94,7 +95,9 @@ function createProductsRouter(db) {
 		response.json(product);
 	});
 
-	router.post('/', async (request, response) => {
+	const teamOnly = requireAuth(db, 'equipe');
+
+	router.post('/', teamOnly, async (request, response) => {
 		const validation = validateProduct(request.body);
 		if (validation.errors) return response.status(400).json({ erro: 'Dados do produto inválidos.', campos: validation.errors });
 
@@ -107,7 +110,7 @@ function createProductsRouter(db) {
 		response.location(`/api/produtos/${result.lastID}`).status(201).json(product);
 	});
 
-	router.put('/:id', async (request, response) => {
+	router.put('/:id', teamOnly, async (request, response) => {
 		const id = parseId(request.params.id);
 		if (!id) return response.status(400).json({ erro: 'ID inválido.' });
 
@@ -126,7 +129,7 @@ function createProductsRouter(db) {
 		response.json(product);
 	});
 
-	router.delete('/:id', async (request, response) => {
+	router.delete('/:id', teamOnly, async (request, response) => {
 		const id = parseId(request.params.id);
 		if (!id) return response.status(400).json({ erro: 'ID inválido.' });
 

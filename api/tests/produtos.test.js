@@ -1,6 +1,7 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const { createApp } = require('../app');
+const { createUser } = require('../auth');
 const { closeDatabase, initializeDatabase, openDatabase, run } = require('../database');
 
 test('API de produtos executa o ciclo CRUD e valida os dados', async (context) => {
@@ -14,6 +15,29 @@ test('API de produtos executa o ciclo CRUD e valida os dados', async (context) =
     await new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
     await closeDatabase(db);
   });
+
+  // As escritas exigem a equipe: este fetch local acrescenta o token a requisições não-GET.
+  let token = null;
+  const rawFetch = globalThis.fetch;
+  const fetch = (url, options = {}) => options.method && options.method !== 'GET' && token
+    ? rawFetch(url, { ...options, headers: { ...options.headers, Authorization: `Bearer ${token}` } })
+    : rawFetch(url, options);
+
+  const unauthenticated = await fetch(`${baseUrl}/api/produtos`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: '{}',
+  });
+  assert.equal(unauthenticated.status, 401);
+
+  await createUser(db, { name: 'Equipe', email: 'equipe@teste.com', password: 'senha-da-equipe', role: 'equipe' });
+  const loginResponse = await fetch(`${baseUrl}/api/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: 'equipe@teste.com', password: 'senha-da-equipe', role: 'equipe' }),
+  });
+  assert.equal(loginResponse.status, 200);
+  token = (await loginResponse.json()).token;
 
   const healthResponse = await fetch(`${baseUrl}/api/health`);
   assert.equal(healthResponse.status, 200);
@@ -97,6 +121,14 @@ test('API de produtos executa o ciclo CRUD e valida os dados', async (context) =
   });
   assert.equal(malformedJsonResponse.status, 400);
   assert.equal((await malformedJsonResponse.json()).erro, 'JSON inválido.');
+
+  const oversizedResponse = await fetch(`${baseUrl}/api/produtos`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ data: 'x'.repeat(101 * 1024) }),
+  });
+  assert.equal(oversizedResponse.status, 413);
+  assert.equal((await oversizedResponse.json()).erro, 'Corpo da requisição excede o limite de 100 KB.');
 
   await assert.rejects(run(db, `
     INSERT INTO produtos (name, segment_id, material, description, price)

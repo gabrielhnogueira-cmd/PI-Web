@@ -8,7 +8,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "test:api": "node --test api/tests/produtos.test.js"
+    "test:api": "node --test \"api/tests/*.test.js\""
   },
   "main": "index.js",
   "repository": {

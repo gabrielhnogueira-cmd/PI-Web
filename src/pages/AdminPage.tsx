@@ -2,11 +2,12 @@ import { useEffect, useState, type FormEvent } from "react";
 import type { Product } from "../data/catalog";
 import { segments } from "../data/catalog";
 import { brl, formatDate } from "../lib/format";
-import type { Order, OrderService, SupportService, Ticket, User } from "../services/types";
+import type { Order, OrderService, SupportService, Ticket, User, CatalogService } from "../services/types";
 
 interface AdminPageProps {
   user: User;
   products: Product[];
+  catalog: CatalogService;
   onProductsChange: (products: Product[]) => void;
   orders: OrderService;
   support: SupportService;
@@ -16,7 +17,7 @@ const orderStatuses: Order["status"][] = ["Aguardando confirmação", "Em produ�
 const ticketStatuses: Ticket["status"][] = ["Aberto", "Respondido", "Encerrado"];
 const fieldClass = "form-control";
 
-export default function AdminPage({ user, products, onProductsChange, orders, support }: AdminPageProps) {
+export default function AdminPage({ user, products, catalog, onProductsChange, orders, support }: AdminPageProps) {
   const [orderList, setOrderList] = useState<Order[]>([]);
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [editing, setEditing] = useState<Product | null>(null);
@@ -38,9 +39,10 @@ export default function AdminPage({ user, products, onProductsChange, orders, su
     return () => { alive = false; };
   }, [orders, support, user]);
 
-  const saveProduct = (event: FormEvent<HTMLFormElement>) => {
+  const saveProduct = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const data = new FormData(event.currentTarget);
+    const form = event.currentTarget;
+    const data = new FormData(form);
     const name = String(data.get("name") ?? "").trim();
     const segmentId = String(data.get("segmentId") ?? "");
     const material = String(data.get("material") ?? "").trim();
@@ -61,26 +63,38 @@ export default function AdminPage({ user, products, onProductsChange, orders, su
       price = cents / 100;
     }
 
-    const product: Product = {
-      id: editing?.id ?? Math.max(0, ...products.map((item) => item.id)) + 1,
-      name,
-      segmentId,
-      material,
-      description,
-      ...(price === undefined ? {} : { price }),
-    };
-    onProductsChange(editing
-      ? products.map((item) => item.id === editing.id ? product : item)
-      : [...products, product]);
-    setEditing(null);
-    setError("");
-    event.currentTarget.reset();
+    const input: Omit<Product, "id"> = { name, segmentId, material, description, ...(price === undefined ? {} : { price }) };
+    setBusyId("product");
+    try {
+      if (editing) {
+        const saved = await catalog.update(editing.id, input);
+        onProductsChange(products.map((item) => item.id === saved.id ? saved : item));
+      } else {
+        onProductsChange([...products, await catalog.create(input)]);
+      }
+      setEditing(null);
+      setError("");
+      form.reset();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Não foi possível salvar o produto.");
+    } finally {
+      setBusyId("");
+    }
   };
 
-  const removeProduct = (product: Product) => {
+  const removeProduct = async (product: Product) => {
     if (!window.confirm(`Excluir "${product.name}" do catálogo?`)) return;
-    onProductsChange(products.filter((item) => item.id !== product.id));
-    if (editing?.id === product.id) setEditing(null);
+    setBusyId("product");
+    try {
+      await catalog.remove(product.id);
+      onProductsChange(products.filter((item) => item.id !== product.id));
+      if (editing?.id === product.id) setEditing(null);
+      setError("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Não foi possível excluir o produto.");
+    } finally {
+      setBusyId("");
+    }
   };
 
   const updateOrderStatus = async (id: string, status: Order["status"]) => {
@@ -116,15 +130,12 @@ export default function AdminPage({ user, products, onProductsChange, orders, su
     <section className="mx-auto w-[min(100%-2rem,1160px)] pb-28 pt-10 sm:pt-16">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="eyebrow mb-2">Painel administrativo · protótipo</p>
+          <p className="eyebrow mb-2">Painel administrativo</p>
           <h1 className="m-0 font-display text-4xl font-bold leading-tight tracking-tight sm:text-5xl">Olá, {user.name.split(" ")[0]}</h1>
-          <p className="mb-0 mt-2 text-soft">Gerencie catálogo, pedidos e chamados nesta demonstração local.</p>
+          <p className="mb-0 mt-2 text-soft">Gerencie catálogo, pedidos e chamados.</p>
         </div>
       </div>
 
-      <p className="mt-6 border-l-4 border-copper bg-chamote px-4 py-3 text-sm leading-relaxed text-soft">
-        Dados e acesso ficam no navegador. Este painel não oferece controle de acesso seguro e não deve ser usado com dados reais em produção.
-      </p>
       {error && <p className="mt-5 text-sm font-semibold text-copper-deep" role="alert">{error}</p>}
 
       <div className="mt-8 grid gap-4 sm:grid-cols-3">
@@ -155,7 +166,7 @@ export default function AdminPage({ user, products, onProductsChange, orders, su
             <textarea key={`description-${editing?.id ?? "new"}`} className={`${fieldClass} min-h-24 resize-y`} name="description" defaultValue={editing?.description ?? ""} maxLength={500} required />
           </label>
           <div className="flex flex-wrap gap-3 sm:col-span-2">
-            <button className="btn-dark" type="submit">{editing ? "Salvar alterações" : "Adicionar produto"}</button>
+            <button className="btn-dark" type="submit" disabled={busyId === "product"}>{editing ? "Salvar alterações" : "Adicionar produto"}</button>
             {editing && <button className="min-h-11 px-3 text-sm font-semibold underline underline-offset-4" type="button" onClick={() => setEditing(null)}>Cancelar edição</button>}
           </div>
         </form>
@@ -169,7 +180,7 @@ export default function AdminPage({ user, products, onProductsChange, orders, su
               </div>
               <div className="flex gap-3">
                 <button className="min-h-10 px-2 text-sm font-semibold underline underline-offset-4" type="button" onClick={() => { setEditing(product); setError(""); }}>Editar</button>
-                <button className="min-h-10 px-2 text-sm font-semibold text-copper-deep underline underline-offset-4" type="button" onClick={() => removeProduct(product)}>Excluir</button>
+                <button className="min-h-10 px-2 text-sm font-semibold text-copper-deep underline underline-offset-4" type="button" onClick={() => void removeProduct(product)}>Excluir</button>
               </div>
             </article>
           ))}
@@ -194,7 +205,7 @@ export default function AdminPage({ user, products, onProductsChange, orders, su
               </label>
             </article>
           ))}
-          {orderList.length === 0 && <p className="py-4 text-soft">Nenhum pedido registrado neste navegador.</p>}
+          {orderList.length === 0 && <p className="py-4 text-soft">Nenhum pedido registrado.</p>}
         </div>
       </section>
 
@@ -215,7 +226,7 @@ export default function AdminPage({ user, products, onProductsChange, orders, su
               </label>
             </article>
           ))}
-          {tickets.length === 0 && <p className="py-4 text-soft">Nenhum chamado registrado neste navegador.</p>}
+          {tickets.length === 0 && <p className="py-4 text-soft">Nenhum chamado registrado.</p>}
         </div>
       </section>
     </section>

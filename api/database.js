@@ -96,6 +96,64 @@ async function initializeDatabase(db, { seed = true, log = true, filename = defa
 		END
 	`);
 
+	await run(db, `
+		CREATE TABLE IF NOT EXISTS usuarios (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			name TEXT NOT NULL CHECK (length(trim(name)) BETWEEN 1 AND 120),
+			email TEXT NOT NULL UNIQUE COLLATE NOCASE CHECK (length(email) BETWEEN 3 AND 254),
+			company TEXT CHECK (company IS NULL OR length(company) <= 120),
+			role TEXT NOT NULL DEFAULT 'cliente' CHECK (role IN ('cliente', 'equipe')),
+			password_hash TEXT NOT NULL,
+			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+		)
+	`);
+	await run(db, `
+		CREATE TABLE IF NOT EXISTS sessoes (
+			token_hash TEXT PRIMARY KEY,
+			user_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			expires_at TEXT NOT NULL
+		)
+	`);
+	await run(db, `
+		CREATE TABLE IF NOT EXISTS pedidos (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+			note TEXT CHECK (note IS NULL OR length(note) <= 500),
+			status TEXT NOT NULL DEFAULT 'Aguardando confirmação'
+				CHECK (status IN ('Aguardando confirmação', 'Em produção', 'Enviado')),
+			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+		)
+	`);
+	// produto_id não é chave estrangeira: o histórico do pedido sobrevive à exclusão do produto.
+	await run(db, `
+		CREATE TABLE IF NOT EXISTS pedido_itens (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			pedido_id INTEGER NOT NULL REFERENCES pedidos(id) ON DELETE CASCADE,
+			produto_id INTEGER NOT NULL,
+			name TEXT NOT NULL,
+			qty INTEGER NOT NULL CHECK (qty BETWEEN 1 AND 1000),
+			unit_price REAL CHECK (unit_price IS NULL OR unit_price >= 0)
+		)
+	`);
+	await run(db, `
+		CREATE TABLE IF NOT EXISTS chamados (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+			pedido_id INTEGER REFERENCES pedidos(id) ON DELETE SET NULL,
+			subject TEXT NOT NULL CHECK (length(trim(subject)) BETWEEN 1 AND 120),
+			message TEXT NOT NULL CHECK (length(trim(message)) BETWEEN 1 AND 2000),
+			status TEXT NOT NULL DEFAULT 'Aberto' CHECK (status IN ('Aberto', 'Respondido', 'Encerrado')),
+			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+		)
+	`);
+	await run(db, 'CREATE INDEX IF NOT EXISTS idx_sessoes_user ON sessoes(user_id)');
+	await run(db, 'CREATE INDEX IF NOT EXISTS idx_pedidos_user ON pedidos(user_id)');
+	await run(db, 'CREATE INDEX IF NOT EXISTS idx_pedido_itens_pedido ON pedido_itens(pedido_id)');
+	await run(db, 'CREATE INDEX IF NOT EXISTS idx_chamados_user ON chamados(user_id)');
+
 	if (seed) {
 		const result = await get(db, 'SELECT COUNT(*) AS total FROM produtos');
 		if (result.total === 0) {

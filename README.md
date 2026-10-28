@@ -8,7 +8,7 @@ O projeto busca facilitar o acesso dos clientes às informações sobre as peça
 
 A proposta do projeto é desenvolver uma aplicação web para a Cerâmica Gramanse, reunindo informações institucionais e uma apresentação organizada de seus produtos.
 
-Atualmente, o projeto conta com uma interface inicial em React, TypeScript e Tailwind CSS. A aplicação apresenta informações sobre a empresa, seus segmentos de atuação, produtos simulados e formas de contato.
+Atualmente, o projeto conta com uma interface em React, TypeScript e Tailwind CSS, integrada à API para consultar o catálogo, autenticar contas, registrar pedidos e chamados. Os segmentos e o formulário de orçamento ainda são demonstrativos.
 
 Os principais segmentos apresentados na interface atual são:
 
@@ -56,16 +56,13 @@ PI-Web/
 └── vite.config.ts
 ```
 
-Os produtos apresentados na interface são dados de demonstração. O catálogo editado no painel administrativo fica salvo no `localStorage` do navegador; ele ainda não é sincronizado com o CRUD de produtos da API. O formulário de orçamento demonstra o fluxo visual e ainda não envia informações para a API.
+Usuários, pedidos, chamados e produtos ficam no banco SQLite e são acessados pela API (`/api/auth`, `/api/pedidos`, `/api/chamados`, `/api/produtos`). Tabelas: `usuarios`, `sessoes`, `pedidos`, `pedido_itens`, `chamados` e `produtos`. O formulário de orçamento ainda demonstra apenas o fluxo visual.
 
-## Painel administrativo demonstrativo
+## Painel administrativo
 
-Acesse `#/admin/entrar` ou use o link **Acesso administrativo** na tela de login:
+Acesse `#/admin/entrar`. A conta da equipe é criada na inicialização da API a partir das variáveis de ambiente `ADMIN_EMAIL` e `ADMIN_PASSWORD` (mínimo de 8 caracteres). O painel permite cadastrar, editar e excluir produtos e preços, consultar pedidos e chamados e alterar seus status. Escritas em `/api/produtos` exigem token de login da equipe (`Authorization: Bearer <token>`, obtido em `POST /api/auth/login`); a coleção Insomnia precisa desse token.
 
-* E-mail: `equipe@gramanse.com`
-* Senha: `gramanse-demo-2026`
-
-O painel permite cadastrar, editar e excluir produtos e preços, consultar pedidos e chamados e alterar seus status. Neste protótipo, catálogo, usuários, pedidos e chamados são mantidos localmente no navegador. As credenciais demonstrativas ficam no código do front-end e **não fornecem segurança nem devem ser usadas em produção**. Um uso real exige autenticação e autorização no servidor, além de persistência centralizada.
+No front-end, `VITE_API_URL` define a URL da API (padrão `/api`, com proxy do Vite para `http://localhost:3000`).
 
 ## Como iniciar
 
@@ -92,7 +89,7 @@ O servidor da API continua disponível pelo comando `npm start`.
 
 ## API e testes
 
-A API Express oferece CRUD de produtos em `/api/produtos` e verificação da conexão SQLite em `/api/health`. Na primeira inicialização, a tabela é criada e recebe dados de demonstração caso esteja vazia. O caminho do banco pode ser configurado pela variável `DB_PATH`.
+A API Express oferece autenticação, CRUD de produtos, pedidos e chamados, além da verificação da conexão SQLite. Na primeira inicialização, as tabelas são criadas e o catálogo recebe dados de demonstração somente se estiver vazio. O caminho do banco pode ser configurado pela variável `DB_PATH`; para criar a conta da equipe, configure `ADMIN_EMAIL` e `ADMIN_PASSWORD`.
 
 ```bash
 npm start
@@ -104,22 +101,27 @@ Em outro terminal, execute o ciclo CRUD automatizado:
 npm run test:api
 ```
 
-Para demonstrar as requisições no Insomnia, importe `insomnia/PI-Web-API.json` e selecione `Base Environment` com `base_url=http://localhost:3000`. Execute Health, Listar, Criar, Consultar, Atualizar e Excluir nessa ordem; a resposta da criação salva o ID para as próximas requisições. Depois execute os requests negativos para conferir validação de campos, segmento, preço, JSON e IDs (`400`/`404`).
+Para demonstrar as requisições no Insomnia, importe `insomnia/PI-Web-API.json` e configure `Base Environment` com `base_url=http://localhost:3000` e a senha da equipe. A coleção inclui login, cadastro, produtos, pedidos, chamados, permissões e requisições inválidas. O roteiro de validação, resultados esperados e tratamento de inconsistências está em [docs/qualidade-dados.md](docs/qualidade-dados.md).
 
 | Método | Rota | Resultado |
 | --- | --- | --- |
 | GET | `/api/health` | Estado da API e do SQLite |
-| GET | `/api/produtos` | Lista produtos |
-| GET | `/api/produtos/:id` | Consulta um produto |
-| POST | `/api/produtos` | Cria produto (`201`) |
-| PUT | `/api/produtos/:id` | Atualiza todos os campos editáveis |
-| DELETE | `/api/produtos/:id` | Exclui produto (`204`) |
+| POST | `/api/auth/register` | Cadastra cliente |
+| POST | `/api/auth/login` | Autentica e retorna token Bearer |
+| GET | `/api/auth/me` | Consulta usuário da sessão |
+| POST | `/api/auth/logout` | Encerra sessão |
+| GET/POST | `/api/produtos` | Lista produtos; equipe cria produto |
+| GET/PUT/DELETE | `/api/produtos/:id` | Consulta, atualiza ou exclui produto; escrita exige equipe |
+| GET/POST | `/api/pedidos` | Lista pedidos permitidos ao usuário ou cria pedido |
+| PATCH | `/api/pedidos/:id/status` | Equipe atualiza status |
+| GET/POST | `/api/chamados` | Lista chamados permitidos ao usuário ou cria chamado |
+| PATCH | `/api/chamados/:id/status` | Equipe atualiza status |
 
 API publicada no Azure App Service (plano B1, Brazil South): [pi-web-gramanse-api-2026.azurewebsites.net](https://pi-web-gramanse-api-2026-dagge8hbemava7bu.brazilsouth-01.azurewebsites.net). A verificação `/api/health` confirma a conexão SQLite; o CRUD foi exercitado remotamente. O custo estimado pelo portal é US$ 14,60/mês enquanto o plano estiver ativo.
 
 Os detalhes do deploy, persistência do banco e captura de logs estão em [docs/azure-app-service.md](docs/azure-app-service.md).
 
-As regras de normalização, validação, tratamento de inconsistências e o fluxo entre Insomnia, Express e SQLite estão documentados em [docs/qualidade-dados.md](docs/qualidade-dados.md). O front-end ainda usa dados simulados; essa fronteira está indicada no documento.
+As regras de normalização, validação, tratamento de inconsistências, testes e o fluxo entre React/Insomnia, Express e SQLite estão documentados em [docs/qualidade-dados.md](docs/qualidade-dados.md).
 
 ## Próximos passos
 
@@ -136,6 +138,6 @@ Entre os objetivos futuros do projeto estão:
 
 ## Status do projeto
 
-O projeto encontra-se em desenvolvimento. A interface inicial em React já contempla navegação responsiva, filtro de produtos simulados e formulário demonstrativo de orçamento.
+O projeto encontra-se em desenvolvimento. A interface em React contempla navegação responsiva, consulta ao catálogo via API e formulário demonstrativo de orçamento, que ainda não é persistido.
 
 As funcionalidades serão adicionadas progressivamente conforme o desenvolvimento do projeto.

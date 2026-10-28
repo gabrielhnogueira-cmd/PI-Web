@@ -21,22 +21,14 @@ import type { CartLine, Services, User } from "./services/types";
 
 const CUSTOM_PART = "Peça técnica personalizada";
 const CART_KEY = "gramanse.cart";
-const PRODUCTS_KEY = "gramanse.products";
 
 interface AppProps { services: Services }
 
 export default function App({ services }: AppProps) {
   const path = usePath();
-  const [products, setProducts] = useState<Product[]>(() => {
-    try {
-      const saved = localStorage.getItem(PRODUCTS_KEY);
-      if (!saved) return initialProducts;
-      const parsed: unknown = JSON.parse(saved);
-      return Array.isArray(parsed) ? parsed as Product[] : initialProducts;
-    } catch {
-      return initialProducts;
-    }
-  });
+  // Enquanto a API não responde (ou se estiver fora do ar), a loja mostra o catálogo estático.
+  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [catalogUnavailable, setCatalogUnavailable] = useState(false);
   const [user, setUser] = useState<User | null>(() => services.account.current());
   const [cart, setCart] = useState<CartLine[]>(() => {
     try { return JSON.parse(localStorage.getItem(CART_KEY) ?? "[]") as CartLine[]; } catch { return []; }
@@ -46,7 +38,19 @@ export default function App({ services }: AppProps) {
   const [requestOpen, setRequestOpen] = useState(false);
 
   useEffect(() => localStorage.setItem(CART_KEY, JSON.stringify(cart)), [cart]);
-  useEffect(() => localStorage.setItem(PRODUCTS_KEY, JSON.stringify(products)), [products]);
+  useEffect(() => {
+    let alive = true;
+    services.catalog.list()
+      .then((list) => {
+        if (alive) {
+          setProducts(list);
+          setCatalogUnavailable(false);
+        }
+      })
+      .catch(() => { if (alive) setCatalogUnavailable(true); });
+    services.account.refresh().then((current) => { if (alive) setUser(current); });
+    return () => { alive = false; };
+  }, [services]);
   useEffect(() => {
     if (path === "/empresa") document.getElementById("empresa")?.scrollIntoView();
     else window.scrollTo(0, 0);
@@ -95,8 +99,9 @@ export default function App({ services }: AppProps) {
         authenticated={user?.role === "equipe" && path === "/admin"}
         onLogout={() => { services.account.logout(); setUser(null); navigate("/admin/entrar"); }}
       >
+        {catalogUnavailable && <p className="m-0 bg-chamote px-4 py-3 text-center text-sm text-ink" role="alert">Não foi possível atualizar o catálogo pelo banco. Os produtos exibidos são dados locais de demonstração e podem estar desatualizados.</p>}
         {path === "/admin" && user?.role === "equipe"
-          ? <AdminPage user={user} products={products} onProductsChange={changeProducts} orders={services.orders} support={services.support} />
+          ? <AdminPage user={user} products={products} catalog={services.catalog} onProductsChange={changeProducts} orders={services.orders} support={services.support} />
           : <AdminLoginPage account={services.account} onAuth={setUser} />}
       </AdminLayout>
     );
@@ -105,6 +110,7 @@ export default function App({ services }: AppProps) {
   return (
     <div className="min-h-screen overflow-x-clip">
       <SiteHeader path={path} user={user} cartCount={cartCount} onRequest={() => openRequest()} />
+      {catalogUnavailable && <p className="m-0 bg-chamote px-4 py-3 text-center text-sm text-ink" role="alert">Não foi possível atualizar o catálogo pelo banco. Os produtos exibidos são dados locais de demonstração e podem estar desatualizados.</p>}
       <main>{page}</main>
       <SiteFooter />
       {requestOpen && <RequestDialog initialProduct={requestProduct} onClose={() => setRequestOpen(false)} />}

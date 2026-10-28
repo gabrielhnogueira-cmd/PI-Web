@@ -43,11 +43,6 @@ export default function AdminLoginPage({ account, onAuth }: AdminLoginPageProps)
         {error && <p className="m-0 text-sm font-semibold text-copper-deep" role="alert">{error}</p>}
         <button className="btn-dark justify-self-start" type="submit" disabled={busy}>{busy ? "Entrando…" : "Entrar no painel"}</button>
       </form>
-      <aside className="mt-7 border-l-4 border-copper bg-chamote p-4 text-sm leading-relaxed text-soft">
-        <strong className="text-ink">Conta demonstrativa (protótipo local)</strong>
-        <p className="mb-0 mt-2">E-mail: equipe@gramanse.com<br />Senha: gramanse-demo-2026</p>
-        <p className="mb-0 mt-2">Este acesso e os dados ficam no navegador; não use em produção.</p>
-      </aside>
     </AuthLayout>
   );
 }

@@ -1,6 +1,9 @@
 const cors = require('cors');
 const express = require('express');
 const { get } = require('./database');
+const { createAuthRouter } = require('./routes/auth');
+const { createTicketsRouter } = require('./routes/chamados');
+const { createOrdersRouter } = require('./routes/pedidos');
 const { createProductsRouter } = require('./routes/produtos');
 
 function createApp(db) {
@@ -22,7 +25,10 @@ function createApp(db) {
     await get(db, 'SELECT 1 AS connected');
     response.json({ status: 'ok', database: 'connected' });
   });
+  app.use('/api/auth', createAuthRouter(db));
   app.use('/api/produtos', createProductsRouter(db));
+  app.use('/api/pedidos', createOrdersRouter(db));
+  app.use('/api/chamados', createTicketsRouter(db));
 
   app.use((request, response) => {
     response.status(404).json({ erro: 'Rota não encontrada.' });
@@ -31,6 +37,9 @@ function createApp(db) {
   app.use((error, request, response, next) => {
     if (error.type === 'entity.parse.failed') {
       return response.status(400).json({ erro: 'JSON inválido.' });
+    }
+    if (error.type === 'entity.too.large') {
+      return response.status(413).json({ erro: 'Corpo da requisição excede o limite de 100 KB.' });
     }
     if (error.code?.startsWith('SQLITE_CONSTRAINT')) {
       return response.status(400).json({ erro: 'Dados incompatíveis com as regras do banco.' });

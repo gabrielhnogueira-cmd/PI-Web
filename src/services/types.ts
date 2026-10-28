@@ -1,3 +1,5 @@
+import type { Product } from "../data/catalog";
+
 export type Role = "cliente" | "equipe";
 
 export interface User { id: string; name: string; email: string; role: Role; company?: string }
@@ -15,6 +17,7 @@ export interface Ticket {
 
 export interface AccountService {
   current(): User | null;
+  refresh(): Promise<User | null>;
   register(input: { name: string; email: string; company?: string; password: string }): Promise<User>;
   login(input: { email: string; password: string; role: Role }): Promise<User>;
   logout(): void;
@@ -29,6 +32,11 @@ export interface SupportService {
   list(user: User): Promise<Ticket[]>;
   updateStatus(ticketId: string, status: Ticket["status"]): Promise<Ticket>;
 }
-// Contrato único que as telas recebem por props (mesmo padrão do App). Hoje a
-// implementação é local; quando houver API, basta outra fábrica com esta interface.
-export interface Services { account: AccountService; orders: OrderService; support: SupportService }
+export interface CatalogService {
+  list(): Promise<Product[]>;
+  create(input: Omit<Product, "id">): Promise<Product>;
+  update(id: number, input: Omit<Product, "id">): Promise<Product>;
+  remove(id: number): Promise<void>;
+}
+// Contrato único que as telas recebem por props; a implementação usa a API Express/SQLite.
+export interface Services { account: AccountService; orders: OrderService; support: SupportService; catalog: CatalogService }

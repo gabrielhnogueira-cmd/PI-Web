@@ -45,7 +45,7 @@ export default function RequestDialog({ initialProduct, onClose }: RequestDialog
         {submitted ? (
           <div className="py-6" role="status">
             <h2 className="block-title m-0" id="request-title">Obrigado pelo seu contato</h2>
-            <p className="mb-0 mt-4 max-w-md text-base leading-relaxed text-soft">Sua solicitação foi registrada neste protótipo. A equipe Gramanse poderá retornar com as orientações técnicas.</p>
+            <p className="mb-0 mt-4 max-w-md text-base leading-relaxed text-soft">Este formulário ainda não envia os dados. Para solicitar um orçamento, entre em contato diretamente com a equipe Gramanse.</p>
             <button className="btn-dark mt-6" type="button" onClick={onClose}>Concluir</button>
           </div>
         ) : (

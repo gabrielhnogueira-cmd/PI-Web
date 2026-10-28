@@ -8,7 +8,7 @@
       "_id": "wrk_pi_web_api",
       "_type": "workspace",
       "name": "PI-Web API",
-      "description": "CRUD de produtos com Express e SQLite"
+      "description": "API de produtos, login, pedidos e chamados (Express e SQLite)"
     },
     {
       "_id": "env_pi_web_api",
@@ -17,7 +17,15 @@
       "name": "Base Environment",
       "data": {
         "base_url": "http://localhost:3000",
-        "produto_id": "1"
+        "produto_id": "1",
+        "admin_email": "equipe@gramanse.com",
+        "admin_password": "TROQUE_PELA_SENHA_DO_ADMIN",
+        "cliente_email": "cliente@teste.com",
+        "cliente_password": "Cliente-2026",
+        "token_equipe": "",
+        "token_cliente": "",
+        "pedido_id": "",
+        "chamado_id": ""
       }
     },
     {
@@ -55,7 +63,12 @@
       "name": "Criar produto (POST)",
       "method": "POST",
       "url": "{{ _.base_url }}/api/produtos",
-      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
       "body": {
         "mimeType": "application/json",
         "text": "{\n  \"name\": \"  Cadinho   de laboratório  \",\n  \"segmentId\": \" LABORATORIO \",\n  \"material\": \" Porcelana   de alta alumina \",\n  \"description\": \" Recipiente para análise em laboratório. \",\n  \"price\": \"15,90\"\n}"
@@ -63,6 +76,10 @@
       "parameters": [],
       "scripts": {
         "afterResponse": "insomnia.test('Produto normalizado e criado', function () {\n  const product = insomnia.response.json();\n  insomnia.expect(insomnia.response.code).to.eql(201);\n  insomnia.expect(product.id).to.be.a('number');\n  insomnia.expect(product.name).to.eql('Cadinho de laboratório');\n  insomnia.expect(product.segmentId).to.eql('laboratorio');\n  insomnia.expect(product.material).to.eql('Porcelana de alta alumina');\n  insomnia.expect(product.description).to.eql('Recipiente para análise em laboratório.');\n  insomnia.expect(product.price).to.eql(15.9);\n});\nif (insomnia.response.code === 201) insomnia.environment.set('produto_id', String(insomnia.response.json().id));"
+      },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token_equipe }}"
       }
     },
     {
@@ -86,7 +103,12 @@
       "name": "Atualizar produto (PUT)",
       "method": "PUT",
       "url": "{{ _.base_url }}/api/produtos/{{ _.produto_id }}",
-      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
       "body": {
         "mimeType": "application/json",
         "text": "{\n  \"name\": \"Cadinho de laboratório atualizado\",\n  \"segmentId\": \"laboratorio\",\n  \"material\": \"Alumina\",\n  \"description\": \"Dados revisados pelo teste PUT.\",\n  \"price\": 18.5\n}"
@@ -94,6 +116,10 @@
       "parameters": [],
       "scripts": {
         "afterResponse": "insomnia.test('Produto atualizado', function () {\n  insomnia.expect(insomnia.response.code).to.eql(200);\n  insomnia.expect(insomnia.response.json().name).to.include('atualizado');\n});"
+      },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token_equipe }}"
       }
     },
     {
@@ -108,6 +134,10 @@
       "parameters": [],
       "scripts": {
         "afterResponse": "insomnia.test('Produto excluído', function () {\n  insomnia.expect(insomnia.response.code).to.eql(204);\n});"
+      },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token_equipe }}"
       }
     },
     {
@@ -117,7 +147,12 @@
       "name": "Validar campos obrigatórios (POST 400)",
       "method": "POST",
       "url": "{{ _.base_url }}/api/produtos",
-      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
       "body": {
         "mimeType": "application/json",
         "text": "{\n  \"name\": \"Produto incompleto\"\n}"
@@ -125,6 +160,10 @@
       "parameters": [],
       "scripts": {
         "afterResponse": "insomnia.test('Payload incompleto rejeitado', function () {\n  const response = insomnia.response.json();\n  insomnia.expect(insomnia.response.code).to.eql(400);\n  insomnia.expect(response.erro).to.be.a('string');\n  insomnia.expect(response.campos).to.have.property('name');\n  insomnia.expect(response.campos).to.have.property('segmentId');\n});"
+      },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token_equipe }}"
       }
     },
     {
@@ -134,7 +173,12 @@
       "name": "Validar segmento não cadastrado (POST 400)",
       "method": "POST",
       "url": "{{ _.base_url }}/api/produtos",
-      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
       "body": {
         "mimeType": "application/json",
         "text": "{\n  \"name\": \"Produto de teste\",\n  \"segmentId\": \"outro\",\n  \"material\": \"Alumina\",\n  \"description\": \"Teste de segmento inválido.\",\n  \"price\": null\n}"
@@ -142,6 +186,10 @@
       "parameters": [],
       "scripts": {
         "afterResponse": "insomnia.test('Segmento inválido rejeitado', function () {\n  insomnia.expect(insomnia.response.code).to.eql(400);\n  insomnia.expect(insomnia.response.json().campos).to.have.property('segmentId');\n});"
+      },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token_equipe }}"
       }
     },
     {
@@ -151,7 +199,12 @@
       "name": "Validar preço com mais de duas casas (POST 400)",
       "method": "POST",
       "url": "{{ _.base_url }}/api/produtos",
-      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
       "body": {
         "mimeType": "application/json",
         "text": "{\n  \"name\": \"Produto de teste\",\n  \"segmentId\": \"laboratorio\",\n  \"material\": \"Alumina\",\n  \"description\": \"Teste de precisão monetária.\",\n  \"price\": 1.234\n}"
@@ -159,6 +212,10 @@
       "parameters": [],
       "scripts": {
         "afterResponse": "insomnia.test('Preço inválido rejeitado', function () {\n  insomnia.expect(insomnia.response.code).to.eql(400);\n  insomnia.expect(insomnia.response.json().campos).to.have.property('price');\n});"
+      },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token_equipe }}"
       }
     },
     {
@@ -168,7 +225,12 @@
       "name": "Validar JSON malformado (POST 400)",
       "method": "POST",
       "url": "{{ _.base_url }}/api/produtos",
-      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
       "body": {
         "mimeType": "application/json",
         "text": "{\"name\":"
@@ -176,6 +238,10 @@
       "parameters": [],
       "scripts": {
         "afterResponse": "insomnia.test('JSON malformado rejeitado', function () {\n  insomnia.expect(insomnia.response.code).to.eql(400);\n  insomnia.expect(insomnia.response.json().erro).to.eql('JSON inválido.');\n});"
+      },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token_equipe }}"
       }
     },
     {
@@ -204,6 +270,296 @@
       "parameters": [],
       "scripts": {
         "afterResponse": "insomnia.test('Produto ausente retorna 404', function () {\n  insomnia.expect(insomnia.response.code).to.eql(404);\n  insomnia.expect(insomnia.response.json().erro).to.include('não encontrado');\n});"
+      }
+    },
+    {
+      "_id": "req_login_team",
+      "_type": "request",
+      "parentId": "wrk_pi_web_api",
+      "name": "1. Login equipe (salva token)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/auth/login",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"{{ _.admin_email }}\",\n  \"password\": \"{{ _.admin_password }}\",\n  \"role\": \"equipe\"\n}"
+      },
+      "parameters": [],
+      "scripts": {
+        "afterResponse": "insomnia.test('Login realizado', function () {\n  insomnia.expect(insomnia.response.code).to.eql(200);\n  insomnia.expect(insomnia.response.json().user.role).to.eql('equipe');\n});\nif (insomnia.response.code === 200) insomnia.environment.set('token_equipe', insomnia.response.json().token);"
+      }
+    },
+    {
+      "_id": "req_register",
+      "_type": "request",
+      "parentId": "wrk_pi_web_api",
+      "name": "2. Cadastrar cliente",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/auth/register",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Cliente Teste\",\n  \"email\": \"{{ _.cliente_email }}\",\n  \"password\": \"{{ _.cliente_password }}\"\n}"
+      },
+      "parameters": [],
+      "scripts": {
+        "afterResponse": "insomnia.test('Cadastro criado ou e-mail já existente', function () {\n  insomnia.expect([201, 409]).to.include(insomnia.response.code);\n});"
+      }
+    },
+    {
+      "_id": "req_login_client",
+      "_type": "request",
+      "parentId": "wrk_pi_web_api",
+      "name": "3. Login cliente (salva token)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/auth/login",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"{{ _.cliente_email }}\",\n  \"password\": \"{{ _.cliente_password }}\",\n  \"role\": \"cliente\"\n}"
+      },
+      "parameters": [],
+      "scripts": {
+        "afterResponse": "insomnia.test('Login realizado', function () {\n  insomnia.expect(insomnia.response.code).to.eql(200);\n  insomnia.expect(insomnia.response.json().user.role).to.eql('cliente');\n});\nif (insomnia.response.code === 200) insomnia.environment.set('token_cliente', insomnia.response.json().token);"
+      }
+    },
+    {
+      "_id": "req_me",
+      "_type": "request",
+      "parentId": "wrk_pi_web_api",
+      "name": "Quem sou eu (GET /auth/me)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/auth/me",
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token_cliente }}"
+      },
+      "scripts": {
+        "afterResponse": "insomnia.test('Status 200', function () {\n  insomnia.expect(insomnia.response.code).to.eql(200);\n});"
+      }
+    },
+    {
+      "_id": "req_create_order",
+      "_type": "request",
+      "parentId": "wrk_pi_web_api",
+      "name": "Criar pedido (cliente)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/pedidos",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"lines\": [\n    {\n      \"productId\": 1,\n      \"qty\": 2\n    }\n  ],\n  \"note\": \"Pedido criado pelo Insomnia\"\n}"
+      },
+      "parameters": [],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token_cliente }}"
+      },
+      "scripts": {
+        "afterResponse": "insomnia.test('Pedido criado', function () {\n  insomnia.expect(insomnia.response.code).to.eql(201);\n});\nif (insomnia.response.code === 201) insomnia.environment.set('pedido_id', insomnia.response.json().id);"
+      }
+    },
+    {
+      "_id": "req_list_orders_client",
+      "_type": "request",
+      "parentId": "wrk_pi_web_api",
+      "name": "Listar pedidos (cliente vê só os seus)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/pedidos",
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token_cliente }}"
+      },
+      "scripts": {
+        "afterResponse": "insomnia.test('Status 200', function () {\n  insomnia.expect(insomnia.response.code).to.eql(200);\n});"
+      }
+    },
+    {
+      "_id": "req_list_orders_team",
+      "_type": "request",
+      "parentId": "wrk_pi_web_api",
+      "name": "Listar pedidos (equipe vê todos)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/pedidos",
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token_equipe }}"
+      },
+      "scripts": {
+        "afterResponse": "insomnia.test('Status 200', function () {\n  insomnia.expect(insomnia.response.code).to.eql(200);\n});"
+      }
+    },
+    {
+      "_id": "req_order_status",
+      "_type": "request",
+      "parentId": "wrk_pi_web_api",
+      "name": "Alterar status do pedido (equipe)",
+      "method": "PATCH",
+      "url": "{{ _.base_url }}/api/pedidos/{{ _.pedido_id }}/status",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"status\": \"Em produção\"\n}"
+      },
+      "parameters": [],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token_equipe }}"
+      },
+      "scripts": {
+        "afterResponse": "insomnia.test('Status 200', function () {\n  insomnia.expect(insomnia.response.code).to.eql(200);\n});"
+      }
+    },
+    {
+      "_id": "req_create_ticket",
+      "_type": "request",
+      "parentId": "wrk_pi_web_api",
+      "name": "Abrir chamado (cliente)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/chamados",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"subject\": \"Dúvida sobre prazo\",\n  \"message\": \"Qual o prazo de entrega?\",\n  \"orderId\": \"{{ _.pedido_id }}\"\n}"
+      },
+      "parameters": [],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token_cliente }}"
+      },
+      "scripts": {
+        "afterResponse": "insomnia.test('Chamado criado', function () {\n  insomnia.expect(insomnia.response.code).to.eql(201);\n});\nif (insomnia.response.code === 201) insomnia.environment.set('chamado_id', insomnia.response.json().id);"
+      }
+    },
+    {
+      "_id": "req_list_tickets_team",
+      "_type": "request",
+      "parentId": "wrk_pi_web_api",
+      "name": "Listar chamados (equipe)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/chamados",
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token_equipe }}"
+      },
+      "scripts": {
+        "afterResponse": "insomnia.test('Status 200', function () {\n  insomnia.expect(insomnia.response.code).to.eql(200);\n});"
+      }
+    },
+    {
+      "_id": "req_ticket_status",
+      "_type": "request",
+      "parentId": "wrk_pi_web_api",
+      "name": "Alterar status do chamado (equipe)",
+      "method": "PATCH",
+      "url": "{{ _.base_url }}/api/chamados/{{ _.chamado_id }}/status",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"status\": \"Respondido\"\n}"
+      },
+      "parameters": [],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token_equipe }}"
+      },
+      "scripts": {
+        "afterResponse": "insomnia.test('Status 200', function () {\n  insomnia.expect(insomnia.response.code).to.eql(200);\n});"
+      }
+    },
+    {
+      "_id": "req_no_token",
+      "_type": "request",
+      "parentId": "wrk_pi_web_api",
+      "name": "Criar produto sem token (401)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/produtos",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"x\"\n}"
+      },
+      "parameters": [],
+      "scripts": {
+        "afterResponse": "insomnia.test('Status 401', function () {\n  insomnia.expect(insomnia.response.code).to.eql(401);\n});"
+      }
+    },
+    {
+      "_id": "req_client_forbidden",
+      "_type": "request",
+      "parentId": "wrk_pi_web_api",
+      "name": "Criar produto como cliente (403)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/produtos",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"x\"\n}"
+      },
+      "parameters": [],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token_cliente }}"
+      },
+      "scripts": {
+        "afterResponse": "insomnia.test('Status 403', function () {\n  insomnia.expect(insomnia.response.code).to.eql(403);\n});"
       }
     }
   ]

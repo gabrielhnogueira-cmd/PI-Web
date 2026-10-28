@@ -31,7 +31,7 @@ export default function AdminLayout({ authenticated, onLogout, children }: Admin
         </nav>
       </header>
       <main>{children}</main>
-      <footer className="border-t border-edge/30 py-6 text-center text-xs text-soft">Cerâmica Gramanse · Área administrativa demonstrativa</footer>
+      <footer className="border-t border-edge/30 py-6 text-center text-xs text-soft">Cerâmica Gramanse · Área administrativa</footer>
     </div>
   );
 }
