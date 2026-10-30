@@ -5,6 +5,11 @@ import { brl } from "../lib/format";
 import { Link, navigate } from "../lib/router";
 import type { CartLine, Order, OrderService, User } from "../services/types";
 
+type SortKey = "padrao" | "nome" | "menor" | "maior";
+
+// Busca sem diferenciar acentos nem maiúsculas ("ceramica" encontra "Cerâmica").
+const normalize = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
 interface ShopPageProps {
   segments: Segment[];
   products: Product[];
@@ -19,13 +24,27 @@ interface ShopPageProps {
 
 export default function ShopPage({ segments, products, cart, user, orders, onAdd, onSetQty, onClear, onQuote }: ShopPageProps) {
   const [filter, setFilter] = useState("todos");
+  const [query, setQuery] = useState("");
+  const [sort, setSort] = useState<SortKey>("padrao");
   const [note, setNote] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "error">("idle");
   const [done, setDone] = useState<Order | null>(null);
 
   const byId = new Map(products.map((product) => [product.id, product]));
   const lines = cart.flatMap((line) => { const product = byId.get(line.productId); return product ? [{ product, qty: line.qty }] : []; });
-  const visible = filter === "todos" ? products : products.filter((product) => product.segmentId === filter);
+  const search = normalize(query.trim());
+  const visible = products
+    .filter((product) => filter === "todos" || product.segmentId === filter)
+    .filter((product) => !search || normalize(`${product.name} ${product.material} ${product.description}`).includes(search))
+    .sort((a, b) => {
+      if (sort === "nome") return a.name.localeCompare(b.name, "pt-BR");
+      if (sort === "menor" || sort === "maior") {
+        // Produtos "sob consulta" (sem preço) ficam sempre no fim da lista.
+        if (a.price === undefined || b.price === undefined) return Number(a.price === undefined) - Number(b.price === undefined);
+        return sort === "menor" ? a.price - b.price : b.price - a.price;
+      }
+      return 0;
+    });
   const itemCount = lines.reduce((sum, line) => sum + line.qty, 0);
   const total = lines.every((line) => line.product.price !== undefined) ? lines.reduce((sum, line) => sum + (line.product.price ?? 0) * line.qty, 0) : null;
 
@@ -53,12 +72,31 @@ export default function ShopPage({ segments, products, cart, user, orders, onAdd
 
       <div className="mt-10 grid gap-12 lg:grid-cols-[1fr_22rem]">
         <div>
+          <div className="mb-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
+            <label className="sr-only" htmlFor="busca-pecas">Buscar peça</label>
+            <input id="busca-pecas" type="search" className="min-h-11 w-full border border-edge/40 bg-white px-4 text-sm text-ink placeholder:text-soft/70 focus:border-copper focus:outline-none" placeholder="Buscar por nome, material ou aplicação" value={query} onChange={(event) => setQuery(event.target.value)} />
+            <label className="sr-only" htmlFor="ordem-pecas">Ordenar peças</label>
+            <select id="ordem-pecas" className="min-h-11 border border-edge/40 bg-white px-3 text-sm text-ink focus:border-copper focus:outline-none" value={sort} onChange={(event) => setSort(event.target.value as SortKey)}>
+              <option value="padrao">Ordem do catálogo</option>
+              <option value="nome">Nome (A–Z)</option>
+              <option value="menor">Menor preço</option>
+              <option value="maior">Maior preço</option>
+            </select>
+          </div>
           <div className="mb-4 flex flex-wrap gap-2" role="group" aria-label="Filtrar por segmento">
             <button className={pill(filter === "todos")} type="button" aria-pressed={filter === "todos"} onClick={() => setFilter("todos")}>Todas</button>
             {segments.map((segment) => (
               <button key={segment.id} className={pill(filter === segment.id)} type="button" aria-pressed={filter === segment.id} onClick={() => setFilter(segment.id)}>{segment.title}</button>
             ))}
           </div>
+          <p className="mb-3 mt-0 text-sm text-soft" aria-live="polite">{visible.length} {visible.length === 1 ? "peça" : "peças"}</p>
+          {visible.length === 0 && (
+            <div className="border border-edge/25 bg-white/70 p-6">
+              <p className="m-0 font-display text-lg font-bold text-ink">Nenhuma peça encontrada</p>
+              <p className="mb-0 mt-2 max-w-md text-sm leading-relaxed text-soft">Não achou o que procura? Descreva a peça e peça um orçamento.</p>
+              <button className="btn-dark mt-4 gap-2" type="button" onClick={() => onQuote(query.trim() || "Peça técnica personalizada")}>Pedir orçamento <span aria-hidden="true">↗</span></button>
+            </div>
+          )}
           {visible.map((product) => <ProductRow key={product.id} product={product} quantity={cart.find((line) => line.productId === product.id)?.qty ?? 0} onAdd={onAdd} onQuote={onQuote} />)}
           <div className="border-t border-edge/40" />
         </div>

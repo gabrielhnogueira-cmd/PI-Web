@@ -6,6 +6,7 @@ import RequestDialog from "./components/RequestDialog";
 import SiteFooter from "./components/SiteFooter";
 import SiteHeader from "./components/SiteHeader";
 import AdminLayout from "./components/AdminLayout";
+import AdminQuotesPanel from "./components/AdminQuotesPanel";
 import SolutionsSection from "./components/SolutionsSection";
 import { products as initialProducts, segments } from "./data/catalog";
 import type { Product } from "./data/catalog";
@@ -80,7 +81,7 @@ export default function App({ services }: AppProps) {
       break;
     case "/entrar": page = <LoginPage {...authProps} />; break;
     case "/cadastro": page = <RegisterPage {...authProps} />; break;
-    case "/conta": page = <AccountPage user={user} orders={services.orders} support={services.support} onLogout={logout} />; break;
+    case "/conta": page = <AccountPage user={user} orders={services.orders} quotes={services.quotes} support={services.support} onLogout={logout} />; break;
     case "/suporte": page = <SupportPage user={user} orders={services.orders} support={services.support} />; break;
     default:
       page = (
@@ -101,7 +102,12 @@ export default function App({ services }: AppProps) {
       >
         {catalogUnavailable && <p className="m-0 bg-chamote px-4 py-3 text-center text-sm text-ink" role="alert">Não foi possível atualizar o catálogo pelo banco. Os produtos exibidos são dados locais de demonstração e podem estar desatualizados.</p>}
         {path === "/admin" && user?.role === "equipe"
-          ? <AdminPage user={user} products={products} catalog={services.catalog} onProductsChange={changeProducts} orders={services.orders} support={services.support} />
+          ? (
+            <>
+              <AdminPage user={user} products={products} catalog={services.catalog} onProductsChange={changeProducts} orders={services.orders} support={services.support} />
+              <AdminQuotesPanel user={user} quotes={services.quotes} />
+            </>
+          )
           : <AdminLoginPage account={services.account} onAuth={setUser} />}
       </AdminLayout>
     );
@@ -113,7 +119,7 @@ export default function App({ services }: AppProps) {
       {catalogUnavailable && <p className="m-0 bg-chamote px-4 py-3 text-center text-sm text-ink" role="alert">Não foi possível atualizar o catálogo pelo banco. Os produtos exibidos são dados locais de demonstração e podem estar desatualizados.</p>}
       <main>{page}</main>
       <SiteFooter />
-      {requestOpen && <RequestDialog initialProduct={requestProduct} onClose={() => setRequestOpen(false)} />}
+      {requestOpen && <RequestDialog initialProduct={requestProduct} products={products} user={user} quotes={services.quotes} onClose={() => setRequestOpen(false)} />}
     </div>
   );
 }

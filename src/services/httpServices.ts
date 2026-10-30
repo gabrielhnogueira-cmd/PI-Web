@@ -1,4 +1,4 @@
-import type { Order, Services, Ticket, User } from "./types";
+import type { Order, Quote, Services, Ticket, User } from "./types";
 import { ApiError, createApiClient } from "./http";
 import type { Product } from "../data/catalog";
 
@@ -10,7 +10,7 @@ interface AuthResponse { token: string; user: User }
 const toProduct = ({ price, ...product }: ApiProduct): Product => ({ ...product, ...(price === null ? {} : { price }) });
 const toBody = (input: Omit<Product, "id">) => ({ ...input, price: input.price ?? null });
 
-// Todas as telas falam com a API Express; contas, pedidos, chamados e produtos ficam no SQLite.
+// Todas as telas falam com a API Express; contas, pedidos, orçamentos, chamados e produtos ficam no SQLite.
 export function createHttpServices(baseUrl: string): Services {
   const api = createApiClient(baseUrl);
 
@@ -56,6 +56,13 @@ export function createHttpServices(baseUrl: string): Services {
       }),
       list: () => api.request<Order[]>("/pedidos"),
       updateStatus: (id, status) => api.request<Order>(`/pedidos/${id}/status`, { method: "PATCH", body: { status } }),
+    },
+    quotes: {
+      create: (input) => api.request<Quote>("/orcamentos", { method: "POST", body: input }),
+      list: () => api.request<Quote[]>("/orcamentos"),
+      respond: (id, input) => api.request<Quote>(`/orcamentos/${id}/resposta`, { method: "PATCH", body: input }),
+      updateStatus: (id, status) => api.request<Quote>(`/orcamentos/${id}/status`, { method: "PATCH", body: { status } }),
+      decide: (id, status) => api.request<Quote>(`/orcamentos/${id}/decisao`, { method: "PATCH", body: { status } }),
     },
     support: {
       open: (_user, input) => api.request<Ticket>("/chamados", { method: "POST", body: input }),
