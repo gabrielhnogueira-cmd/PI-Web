@@ -119,7 +119,7 @@ export default function App({ services }: AppProps) {
       {catalogUnavailable && <p className="m-0 bg-chamote px-4 py-3 text-center text-sm text-ink" role="alert">Não foi possível atualizar o catálogo pelo banco. Os produtos exibidos são dados locais de demonstração e podem estar desatualizados.</p>}
       <main>{page}</main>
       <SiteFooter />
-      {requestOpen && <RequestDialog initialProduct={requestProduct} products={products} user={user} quotes={services.quotes} onClose={() => setRequestOpen(false)} />}
+      {requestOpen && <RequestDialog initialProduct={requestProduct} onClose={() => setRequestOpen(false)} />}
     </div>
   );
 }
