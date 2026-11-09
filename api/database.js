@@ -195,6 +195,17 @@ async function initializeDatabase(db, { seed = true, log = true, filename = defa
 		)
 	`);
 	await run(db, `
+		CREATE TABLE IF NOT EXISTS pagamentos (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			pedido_id INTEGER NOT NULL UNIQUE REFERENCES pedidos(id) ON DELETE CASCADE,
+			method TEXT NOT NULL CHECK (method IN ('pix', 'cartao', 'boleto')),
+			status TEXT NOT NULL CHECK (status = 'Aprovado'),
+			amount REAL NOT NULL CHECK (amount >= 0),
+			transaction_id TEXT NOT NULL UNIQUE,
+			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+		)
+	`);
+	await run(db, `
 		CREATE TABLE IF NOT EXISTS chamados (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			user_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,

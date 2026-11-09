@@ -50,9 +50,9 @@ export function createHttpServices(baseUrl: string): Services {
       },
     },
     orders: {
-      create: (_user, lines, note) => api.request<Order>("/pedidos", {
+      create: (_user, lines, note, payment) => api.request<Order>("/pedidos", {
         method: "POST",
-        body: { lines: lines.map(({ productId, qty }) => ({ productId, qty })), note },
+        body: { lines: lines.map(({ productId, qty }) => ({ productId, qty })), note, ...(payment ? { payment } : {}) },
       }),
       list: () => api.request<Order[]>("/pedidos"),
       updateStatus: (id, status) => api.request<Order>(`/pedidos/${id}/status`, { method: "PATCH", body: { status } }),

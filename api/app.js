@@ -37,8 +37,8 @@ function createApp(db) {
   app.use(express.static(distPath));
 
   // SPA fallback: retorna index.html para rotas não encontradas (exceto /api)
-  app.get('*', (request, response, next) => {
-    if (request.path.startsWith('/api')) {
+  app.use((request, response, next) => {
+    if (request.method !== 'GET' || request.path.startsWith('/api')) {
       return next();
     }
     response.sendFile(path.join(distPath, 'index.html'));

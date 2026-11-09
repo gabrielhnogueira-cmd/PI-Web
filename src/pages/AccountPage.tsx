@@ -132,6 +132,7 @@ export default function AccountPage({ user, orders, quotes, support, onLogout }:
               </div>
               <p className="m-0 mt-1 text-sm text-soft">{formatDate(order.createdAt)}{team && ` · ${order.userName}`}</p>
               <p className="mb-0 mt-2 text-sm">{order.lines.map((line) => `${line.qty}× ${line.name}`).join(", ")}</p>
+              {order.payment && <p className="mb-0 mt-1 text-sm text-soft">Forma de pagamento: {order.payment.method === "cartao" ? "cartão" : order.payment.method === "pix" ? "Pix" : "boleto"} · {brl(order.payment.amount)}</p>}
               {order.note && <p className="mb-0 mt-1 text-sm text-soft">Obs.: {order.note}</p>}
             </article>
           ))}

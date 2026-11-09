@@ -3,7 +3,8 @@ import ProductRow from "../components/ProductRow";
 import type { Product, Segment } from "../data/catalog";
 import { brl } from "../lib/format";
 import { Link, navigate } from "../lib/router";
-import type { CartLine, Order, OrderService, User } from "../services/types";
+import { ApiError } from "../services/http";
+import type { CartLine, Order, OrderService, PaymentMethod, User } from "../services/types";
 
 type SortKey = "padrao" | "nome" | "menor" | "maior";
 
@@ -28,6 +29,8 @@ export default function ShopPage({ segments, products, cart, user, orders, onAdd
   const [sort, setSort] = useState<SortKey>("padrao");
   const [note, setNote] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "error">("idle");
+  const [sendError, setSendError] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("pix");
   const [done, setDone] = useState<Order | null>(null);
 
   const byId = new Map(products.map((product) => [product.id, product]));
@@ -51,13 +54,22 @@ export default function ShopPage({ segments, products, cart, user, orders, onAdd
   const send = async () => {
     if (!user) return navigate("/entrar");
     setStatus("sending");
+    setSendError("");
     try {
-      const order = await orders.create(user, lines.map(({ product, qty }) => ({ productId: product.id, name: product.name, qty })), note.trim() || undefined);
+      const order = await orders.create(
+        user,
+        lines.map(({ product, qty }) => ({ productId: product.id, name: product.name, qty })),
+        note.trim() || undefined,
+        total === null ? undefined : { method: paymentMethod, outcome: "approved" },
+      );
       setDone(order);
       setNote("");
       setStatus("idle");
       onClear();
-    } catch {
+    } catch (error) {
+      setSendError(error instanceof ApiError && error.status === 402
+        ? "Não foi possível confirmar o pagamento. Confira os dados e tente novamente."
+        : "Não foi possível concluir o pedido. Tente novamente.");
       setStatus("error");
     }
   };
@@ -107,6 +119,12 @@ export default function ShopPage({ segments, products, cart, user, orders, onAdd
               <p className="eyebrow mb-2">Solicitação registrada</p>
               <h2 className="m-0 font-display text-2xl font-bold text-ink">Pedido enviado</h2>
               <p className="mb-0 mt-3 text-sm leading-relaxed text-soft">O pedido <strong className="text-copper-deep">{done.id}</strong> foi registrado. Você acompanha o andamento na sua conta.</p>
+              {done.payment && (
+                <p className="mb-0 mt-3 border border-edge/30 bg-fundo/60 p-3 text-sm leading-relaxed text-ink">
+                  Forma escolhida: {done.payment.method === "cartao" ? "cartão" : done.payment.method === "pix" ? "Pix" : "boleto"} · {brl(done.payment.amount)}.
+                  <span className="mt-1 block text-xs text-soft">A equipe entrará em contato para confirmar os próximos passos. Nenhuma cobrança foi feita agora.</span>
+                </p>
+              )}
               <div className="mt-5 flex flex-wrap items-center gap-3">
                 <Link className="btn-copper" to="/conta">Ver meus pedidos</Link>
                 <button className="min-h-11 text-sm font-semibold text-soft underline underline-offset-4 hover:text-ink" type="button" onClick={() => setDone(null)}>Novo pedido</button>
@@ -159,9 +177,24 @@ export default function ShopPage({ segments, products, cart, user, orders, onAdd
                   <label className="mt-5 grid gap-2 text-sm font-semibold text-ink">Observações <span className="font-normal text-soft">Opcional</span>
                     <textarea className="min-h-24 w-full resize-y border border-edge/40 bg-white px-3 py-2.5 text-sm font-normal text-ink placeholder:text-soft/70 focus:border-copper focus:outline-none" rows={3} value={note} onChange={(event) => setNote(event.target.value)} placeholder="Dimensões, regime de trabalho…" />
                   </label>
-                  {status === "error" && <p className="mb-0 mt-3 text-sm font-semibold text-copper-deep" role="alert">Não foi possível enviar. Tente novamente.</p>}
+                  {total !== null ? (
+                    <div className="mt-5 grid gap-4 border border-edge/30 bg-fundo/50 p-4">
+                      <p className="m-0 font-display text-sm font-bold uppercase tracking-[0.08em] text-ink">Pagamento</p>
+                      <label className="grid gap-2 text-sm font-semibold text-ink">Forma de pagamento
+                        <select className="min-h-11 border border-edge/40 bg-white px-3 text-sm text-ink focus:border-copper focus:outline-none" value={paymentMethod} onChange={(event) => setPaymentMethod(event.target.value as PaymentMethod)}>
+                          <option value="pix">Pix</option>
+                          <option value="cartao">Cartão de crédito</option>
+                          <option value="boleto">Boleto</option>
+                        </select>
+                      </label>
+                      <p className="m-0 text-xs leading-relaxed text-soft">A equipe confirmará os detalhes do pagamento com você. Nenhuma cobrança será feita agora.</p>
+                    </div>
+                  ) : (
+                    <p className="mb-0 mt-4 text-xs leading-relaxed text-soft">Este pedido contém item sob consulta. O valor será confirmado antes de qualquer pagamento.</p>
+                  )}
+                  {status === "error" && <p className="mb-0 mt-3 text-sm font-semibold text-copper-deep" role="alert">{sendError}</p>}
                   <button className="btn-copper mt-5 w-full gap-3" type="button" disabled={status === "sending"} onClick={send}>
-                    {status === "sending" ? "Enviando…" : user ? "Enviar pedido" : "Entrar para enviar o pedido"}
+                    {status === "sending" ? "Enviando pedido…" : user ? total === null ? "Enviar pedido para análise" : "Finalizar pedido" : "Entrar para continuar"}
                     <span className="font-bold" aria-hidden="true">↗</span>
                   </button>
                   <button className="mt-3 min-h-10 w-full text-xs font-semibold text-soft underline decoration-ink/25 underline-offset-4 transition-colors hover:text-copper-deep hover:decoration-copper" type="button" onClick={onClear}>Esvaziar pedido</button>

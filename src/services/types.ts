@@ -5,9 +5,15 @@ export type Role = "cliente" | "equipe";
 export interface User { id: string; name: string; email: string; role: Role; company?: string }
 export interface CartLine { productId: number; qty: number }
 export interface OrderLine { productId: number; name: string; qty: number }
+export type PaymentMethod = "pix" | "cartao" | "boleto";
+export interface PaymentSimulation { method: PaymentMethod; outcome: "approved" | "declined" }
+export interface OrderPayment {
+  method: PaymentMethod; status: "Aprovado"; amount: number; transactionId: string; createdAt: string;
+}
 
 export interface Order {
   id: string; userId: string; userName: string; lines: OrderLine[]; note?: string;
+  payment?: OrderPayment;
   status: "Aguardando confirmação" | "Em produção" | "Enviado"; createdAt: string;
 }
 export interface Ticket {
@@ -35,7 +41,7 @@ export interface AccountService {
   logout(): void;
 }
 export interface OrderService {
-  create(user: User, lines: OrderLine[], note?: string): Promise<Order>;
+  create(user: User, lines: OrderLine[], note?: string, payment?: PaymentSimulation): Promise<Order>;
   list(user: User): Promise<Order[]>;
   updateStatus(orderId: string, status: Order["status"]): Promise<Order>;
 }

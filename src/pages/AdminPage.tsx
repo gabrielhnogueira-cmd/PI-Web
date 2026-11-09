@@ -196,6 +196,7 @@ export default function AdminPage({ user, products, catalog, onProductsChange, o
               <div>
                 <h3 className="m-0 font-display text-lg font-bold">{order.id} <span className="font-sans text-sm font-normal text-soft">· {order.userName}</span></h3>
                 <p className="mb-0 mt-1 text-sm text-soft">{formatDate(order.createdAt)} · {order.lines.map((line) => `${line.qty}× ${line.name}`).join(", ")}</p>
+                {order.payment && <p className="mb-0 mt-1 text-sm text-soft">Forma de pagamento: {order.payment.method === "cartao" ? "cartão" : order.payment.method === "pix" ? "Pix" : "boleto"} · {brl(order.payment.amount)}</p>}
                 {order.note && <p className="mb-0 mt-1 text-sm text-soft">Obs.: {order.note}</p>}
               </div>
               <label className="form-label sm:w-56">Status

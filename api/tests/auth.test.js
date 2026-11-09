@@ -83,6 +83,47 @@ test('login bloqueia tentativas repetidas com senha errada', async (context) => 
   assert.equal(blocked.status, 429);
 });
 
+test('gateway simulado recusa sem criar pedido e persiste pagamentos aprovados', async (context) => {
+  const { db, call } = await setup(context);
+  const client = (await call('POST', '/api/auth/register', {
+    body: { name: 'Maria', email: 'pagamento@teste.com', password: 'senha-da-maria' },
+  })).body;
+
+  const invalidMethod = await call('POST', '/api/pedidos', {
+    token: client.token,
+    body: { lines: [{ productId: 1, qty: 1 }], payment: { method: 'dinheiro', outcome: 'approved' } },
+  });
+  assert.equal(invalidMethod.status, 400);
+
+  const declined = await call('POST', '/api/pedidos', {
+    token: client.token,
+    body: { lines: [{ productId: 1, qty: 2 }], payment: { method: 'pix', outcome: 'declined' } },
+  });
+  assert.equal(declined.status, 402);
+  assert.equal(declined.body.payment.status, 'Recusado');
+  assert.equal((await get(db, 'SELECT COUNT(*) AS total FROM pedidos')).total, 0);
+
+  const approved = await call('POST', '/api/pedidos', {
+    token: client.token,
+    body: {
+      lines: [{ productId: 1, qty: 2 }, { productId: 3, qty: 1 }],
+      payment: { method: 'cartao', outcome: 'approved' },
+    },
+  });
+  assert.equal(approved.status, 201);
+  assert.deepEqual(approved.body.payment, {
+    method: 'cartao',
+    status: 'Aprovado',
+    amount: 256.5,
+    transactionId: approved.body.payment.transactionId,
+    createdAt: approved.body.payment.createdAt,
+  });
+  assert.match(approved.body.payment.transactionId, /^SIM-/);
+  assert.equal((await get(db, 'SELECT COUNT(*) AS total FROM pagamentos')).total, 1);
+  const listed = await call('GET', '/api/pedidos', { token: client.token });
+  assert.equal(listed.body[0].payment.amount, 256.5);
+});
+
 test('pedidos e chamados são gravados no banco e respeitam permissões', async (context) => {
   const { db, call } = await setup(context);
   assert.equal(await ensureAdmin(db, { email: 'Equipe@Gramanse.com', password: 'senha-da-equipe' }), 'created');

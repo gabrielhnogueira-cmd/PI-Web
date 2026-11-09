@@ -8,7 +8,7 @@ O projeto busca facilitar o acesso dos clientes às informações sobre as peça
 
 A proposta do projeto é desenvolver uma aplicação web para a Cerâmica Gramanse, reunindo informações institucionais e uma apresentação organizada de seus produtos.
 
-Atualmente, o projeto conta com uma interface em React, TypeScript e Tailwind CSS, integrada à API para consultar o catálogo, autenticar contas, registrar pedidos e chamados. Os segmentos e o formulário de orçamento ainda são demonstrativos.
+Atualmente, o projeto conta com uma interface em React, TypeScript e Tailwind CSS, integrada à API para consultar o catálogo, autenticar contas, registrar pedidos e chamados. No checkout, o cliente escolhe Pix, cartão ou boleto; a equipe confirma os detalhes do pagamento. Nenhuma cobrança é realizada pelo sistema. Os segmentos e o formulário de orçamento ainda são demonstrativos.
 
 Os principais segmentos apresentados na interface atual são:
 
@@ -56,7 +56,7 @@ PI-Web/
 └── vite.config.ts
 ```
 
-Usuários, pedidos, chamados e produtos ficam no banco SQLite e são acessados pela API (`/api/auth`, `/api/pedidos`, `/api/chamados`, `/api/produtos`). Tabelas: `usuarios`, `sessoes`, `pedidos`, `pedido_itens`, `chamados` e `produtos`. O formulário de orçamento ainda demonstra apenas o fluxo visual.
+Usuários, pedidos, registros de pagamento, chamados e produtos ficam no banco SQLite e são acessados pela API (`/api/auth`, `/api/pedidos`, `/api/chamados`, `/api/produtos`). Tabelas: `usuarios`, `sessoes`, `pedidos`, `pedido_itens`, `pagamentos`, `chamados` e `produtos`. O formulário de orçamento ainda demonstra apenas o fluxo visual.
 
 ## Painel administrativo
 
@@ -112,7 +112,7 @@ Para demonstrar as requisições no Insomnia, importe `insomnia/PI-Web-API.json`
 | POST | `/api/auth/logout` | Encerra sessão |
 | GET/POST | `/api/produtos` | Lista produtos; equipe cria produto |
 | GET/PUT/DELETE | `/api/produtos/:id` | Consulta, atualiza ou exclui produto; escrita exige equipe |
-| GET/POST | `/api/pedidos` | Lista pedidos permitidos ao usuário ou cria pedido |
+| GET/POST | `/api/pedidos` | Lista pedidos permitidos ao usuário ou cria pedido; `payment` opcional registra a forma de pagamento sem realizar cobrança |
 | PATCH | `/api/pedidos/:id/status` | Equipe atualiza status |
 | GET/POST | `/api/chamados` | Lista chamados permitidos ao usuário ou cria chamado |
 | PATCH | `/api/chamados/:id/status` | Equipe atualiza status |
