@@ -12,7 +12,11 @@ React (telas e serviços HTTP) / Insomnia
         ▼
 Express: limite de 100 KB, log de rota e tratamento de erro
         ▼
-Rotas: autenticação/autorização + validação + normalização
+Rotas: mapeiam endpoints e aplicam autenticação/autorização
+        ▼
+Controllers: validam/normalizam a entrada e definem respostas HTTP
+        ▼
+Models: consultam e persistem entidades no SQLite
         ▼
 SQLite: SQL parametrizado, chaves estrangeiras, CHECKs e triggers
         ▼

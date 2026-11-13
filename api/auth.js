@@ -1,6 +1,6 @@
 const crypto = require('node:crypto');
 const { promisify } = require('node:util');
-const { get, run } = require('./database');
+const userModel = require('./models/userModel');
 
 const scrypt = promisify(crypto.scrypt);
 const SESSION_DAYS = 7;
@@ -25,12 +25,12 @@ const hashToken = (token) => crypto.createHash('sha256').update(token).digest('h
 
 async function createSession(db, userId) {
 	const token = crypto.randomBytes(32).toString('base64url');
-	await run(db, "DELETE FROM sessoes WHERE expires_at <= datetime('now')");
-	await run(
-		db,
-		`INSERT INTO sessoes (token_hash, user_id, expires_at) VALUES (?, ?, datetime('now', '+${SESSION_DAYS} days'))`,
-		[hashToken(token), userId],
-	);
+	await userModel.deleteExpiredSessions(db);
+	const expiresAt = new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000)
+		.toISOString()
+		.replace('T', ' ')
+		.slice(0, 19);
+	await userModel.saveSession(db, { tokenHash: hashToken(token), userId, expiresAt });
 	return token;
 }
 
@@ -48,11 +48,7 @@ function requireAuth(db, ...roles) {
 		if (!match) return response.status(401).json({ erro: 'Entre na sua conta para continuar.' });
 
 		const tokenHash = hashToken(match[1]);
-		const user = await get(db, `
-			SELECT u.id, u.name, u.email, u.company, u.role
-			FROM sessoes s JOIN usuarios u ON u.id = s.user_id
-			WHERE s.token_hash = ? AND s.expires_at > datetime('now')
-		`, [tokenHash]);
+		const user = await userModel.findSessionUser(db, tokenHash);
 		if (!user) return response.status(401).json({ erro: 'Sessão inválida ou expirada. Entre novamente.' });
 		if (roles.length > 0 && !roles.includes(user.role)) {
 			return response.status(403).json({ erro: 'Você não tem permissão para esta ação.' });
@@ -66,10 +62,7 @@ function requireAuth(db, ...roles) {
 
 async function createUser(db, { name, email, company = null, password, role = 'cliente' }) {
 	const passwordHash = await hashPassword(password);
-	const result = await run(db, `
-		INSERT INTO usuarios (name, email, company, role, password_hash) VALUES (?, ?, ?, ?, ?)
-	`, [name, email, company, role, passwordHash]);
-	return get(db, 'SELECT id, name, email, company, role FROM usuarios WHERE id = ?', [result.lastID]);
+	return userModel.createUser(db, { name, email, company, role, passwordHash });
 }
 
 // Cria a conta da equipe a partir de variáveis de ambiente, sem senha no código-fonte.
@@ -78,13 +71,13 @@ async function ensureAdmin(db, { email, password, name = 'Equipe Gramanse' }) {
 	if (String(password).length < PASSWORD_MIN || String(password).length > PASSWORD_MAX) {
 		throw new Error(`ADMIN_PASSWORD deve ter entre ${PASSWORD_MIN} e ${PASSWORD_MAX} caracteres.`);
 	}
-	const existing = await get(db, 'SELECT id, role FROM usuarios WHERE email = ?', [normalizedEmail]);
+	const existing = await userModel.findUserByEmail(db, normalizedEmail);
 	if (!existing) {
 		await createUser(db, { name, email: normalizedEmail, password, role: 'equipe' });
 		return 'created';
 	}
 	if (existing.role !== 'equipe') {
-		await run(db, "UPDATE usuarios SET role = 'equipe' WHERE id = ?", [existing.id]);
+		await userModel.promoteToTeam(db, existing.id);
 		return 'promoted';
 	}
 	return 'unchanged';

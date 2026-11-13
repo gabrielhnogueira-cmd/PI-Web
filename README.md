@@ -42,7 +42,15 @@ O front-end utiliza React, TypeScript, Vite e Tailwind CSS. A API utiliza Node.j
 
 ```text
 PI-Web/
-├── api/                    # Servidor Express e rotas da API
+├── api/
+│   ├── controllers/        # Validação e tratamento das requisições HTTP
+│   ├── models/             # Consultas e gravações no SQLite
+│   ├── routes/             # Endpoints e middlewares de acesso
+│   ├── tests/               # Testes automatizados da API
+│   ├── app.js               # Configuração do Express e registro das rotas
+│   ├── auth.js              # Hashes, sessões e middleware de autenticação
+│   ├── database.js          # Inicialização do SQLite e helpers de consulta
+│   └── server.js            # Inicialização do servidor
 ├── assets/images/          # Imagens locais da interface
 ├── src/
 │   ├── components/         # Componentes React reutilizáveis
@@ -55,6 +63,8 @@ PI-Web/
 ├── tsconfig.json
 └── vite.config.ts
 ```
+
+O backend segue o padrão MVC: as **rotas** definem os endpoints e permissões, os **controllers** validam a entrada e montam as respostas HTTP, e os **models** concentram as consultas e gravações no banco. O fluxo é `requisição → rota → controller → model → SQLite`, retornando pelo caminho inverso.
 
 Usuários, pedidos, registros de pagamento, chamados e produtos ficam no banco SQLite e são acessados pela API (`/api/auth`, `/api/pedidos`, `/api/chamados`, `/api/produtos`). Tabelas: `usuarios`, `sessoes`, `pedidos`, `pedido_itens`, `pagamentos`, `chamados` e `produtos`. O formulário de orçamento ainda demonstra apenas o fluxo visual.
 
