@@ -1,3 +1,5 @@
+import inicioImage from "../../assets/images/Inicio.png";
+
 const values = [
   { title: "Resistência térmica", description: "Peças formuladas para operar em regimes de alta temperatura." },
   { title: "Precisão dimensional", description: "Produção conforme dimensões e requisitos de cada aplicação." },
@@ -12,7 +14,7 @@ export default function CompanySection() {
         <div className="relative mx-auto w-full max-w-sm">
           <div className="absolute -right-6 top-12 h-28 w-28 rounded-full bg-copper" aria-hidden="true" />
           <div className="relative aspect-[3/4] overflow-hidden rounded-t-full bg-carvao">
-            <img className="h-full w-full object-cover" src="/assets/images/Inicio.png" alt="Peças cerâmicas fabricadas pela Gramanse" width={600} height={800} loading="lazy" />
+            <img className="h-full w-full object-cover" src={inicioImage} alt="Peças cerâmicas fabricadas pela Gramanse" width={600} height={800} loading="lazy" />
           </div>
         </div>
         <div>

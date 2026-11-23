@@ -129,6 +129,10 @@ Para demonstrar as requisições no Insomnia, importe `insomnia/PI-Web-API.json`
 
 API publicada no Azure App Service (plano B1, Brazil South): [pi-web-gramanse-api-2026.azurewebsites.net](https://pi-web-gramanse-api-2026-dagge8hbemava7bu.brazilsouth-01.azurewebsites.net). A verificação `/api/health` confirma a conexão SQLite; o CRUD foi exercitado remotamente. O custo estimado pelo portal é US$ 14,60/mês enquanto o plano estiver ativo.
 
+Links de acesso:
+- Site: [bit.ly/ceramica-gramense](https://bit.ly/ceramica-gramense)
+- API: [bit.ly/ceramica-gramense-api](https://bit.ly/ceramica-gramense-api)
+
 Os detalhes do deploy, persistência do banco e captura de logs estão em [docs/azure-app-service.md](docs/azure-app-service.md).
 
 As regras de normalização, validação, tratamento de inconsistências, testes e o fluxo entre React/Insomnia, Express e SQLite estão documentados em [docs/qualidade-dados.md](docs/qualidade-dados.md).

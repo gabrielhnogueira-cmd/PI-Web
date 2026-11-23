@@ -1,3 +1,4 @@
+import inicioImage from "../../assets/images/Inicio.png";
 import { Link } from "../lib/router";
 
 interface HeroSectionProps { onRequest: () => void }
@@ -20,7 +21,7 @@ export default function HeroSection({ onRequest }: HeroSectionProps) {
       <div className="relative mx-auto w-full max-w-md lg:max-w-none">
         <div className="absolute -left-6 bottom-10 h-40 w-40 rounded-full bg-copper sm:h-56 sm:w-56" aria-hidden="true" />
         <div className="relative aspect-[4/5] overflow-hidden rounded-t-full bg-chamote">
-          <img className="h-full w-full object-cover" src="/assets/images/Inicio.png" alt="Peça cerâmica refratária fabricada pela Gramanse" width={800} height={1000} />
+          <img className="h-full w-full object-cover" src={inicioImage} alt="Peça cerâmica refratária fabricada pela Gramanse" width={800} height={1000} />
         </div>
       </div>
     </section>
