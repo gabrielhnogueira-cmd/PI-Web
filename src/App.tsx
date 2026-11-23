@@ -10,7 +10,7 @@ import AdminQuotesPanel from "./components/AdminQuotesPanel";
 import SolutionsSection from "./components/SolutionsSection";
 import { products as initialProducts, segments } from "./data/catalog";
 import type { Product } from "./data/catalog";
-import { usePath, navigate } from "./lib/router";
+import { Link, usePath, navigate } from "./lib/router";
 import AccountPage from "./pages/AccountPage";
 import AdminLoginPage from "./pages/AdminLoginPage";
 import AdminPage from "./pages/AdminPage";
@@ -119,6 +119,25 @@ export default function App({ services }: AppProps) {
       {catalogUnavailable && <p className="m-0 bg-chamote px-4 py-3 text-center text-sm text-ink" role="alert">Não foi possível atualizar o catálogo pelo banco. Os produtos exibidos são dados locais de demonstração e podem estar desatualizados.</p>}
       <main>{page}</main>
       <SiteFooter />
+      {cartCount > 0 && (
+        <Link
+          className="fixed bottom-5 right-5 z-40 inline-flex min-h-14 items-center gap-3 rounded-full border border-copper bg-carvao px-5 font-display text-sm font-bold text-fundo shadow-lg transition-colors hover:bg-copper hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-copper"
+          to="/loja"
+          aria-label={`Ver carrinho: ${cartCount} ${cartCount === 1 ? "item" : "itens"}`}
+          onClick={path === "/loja" ? (event) => {
+            event.preventDefault();
+            document.getElementById("resumo-pedido")?.scrollIntoView({ behavior: "smooth", block: "center" });
+          } : undefined}
+        >
+          <svg className="h-6 w-6 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M3 3h2l2.4 12.2a2 2 0 0 0 2 1.6h8.8a2 2 0 0 0 2-1.6L22 8H6" />
+            <circle cx="10" cy="21" r="1" />
+            <circle cx="19" cy="21" r="1" />
+          </svg>
+          <span>Carrinho</span>
+          <span className="grid h-7 min-w-7 place-items-center rounded-full bg-copper px-2 text-xs text-ink" aria-hidden="true">{cartCount}</span>
+        </Link>
+      )}
       {requestOpen && <RequestDialog initialProduct={requestProduct} onClose={() => setRequestOpen(false)} />}
     </div>
   );

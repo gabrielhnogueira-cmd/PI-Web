@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import gramanseMark from "../../assets/images/gramanse-mark.png";
 import { Link } from "../lib/router";
 
 interface AdminLayoutProps {
@@ -14,7 +15,7 @@ export default function AdminLayout({ authenticated, onLogout, children }: Admin
         <div className="h-1 bg-copper" aria-hidden="true" />
         <nav className="mx-auto flex min-h-[4.5rem] w-[min(100%-2rem,1160px)] flex-wrap items-center justify-between gap-4 py-3 sm:min-h-[5rem]" aria-label="Navegação administrativa">
           <Link className="flex min-w-0 items-center gap-2.5 text-ink no-underline" to={authenticated ? "/admin" : "/admin/entrar"}>
-            <img className="h-12 w-12 shrink-0 object-contain" src="/assets/images/gramanse-mark.png" alt="" />
+            <img className="h-12 w-12 shrink-0 object-contain" src={gramanseMark} alt="" />
             <span className="flex min-w-0 flex-col leading-tight">
               <span className="truncate font-display text-base font-bold uppercase tracking-[0.04em] sm:text-lg">Cerâmica Gramanse</span>
               <span className="mt-1 font-display text-[0.58rem] font-semibold uppercase tracking-[0.14em] text-copper-deep">Painel administrativo</span>

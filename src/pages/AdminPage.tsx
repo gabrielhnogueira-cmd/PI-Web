@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import type { Product } from "../data/catalog";
+import ProductEditorDialog from "../components/ProductEditorDialog";
 import { segments } from "../data/catalog";
 import { brl, formatDate } from "../lib/format";
 import type { Order, OrderService, SupportService, Ticket, User, CatalogService } from "../services/types";
@@ -39,7 +40,7 @@ export default function AdminPage({ user, products, catalog, onProductsChange, o
     return () => { alive = false; };
   }, [orders, support, user]);
 
-  const saveProduct = async (event: FormEvent<HTMLFormElement>) => {
+  const saveProduct = async (event: FormEvent<HTMLFormElement>, productToUpdate?: Product) => {
     event.preventDefault();
     const form = event.currentTarget;
     const data = new FormData(form);
@@ -66,8 +67,8 @@ export default function AdminPage({ user, products, catalog, onProductsChange, o
     const input: Omit<Product, "id"> = { name, segmentId, material, description, ...(price === undefined ? {} : { price }) };
     setBusyId("product");
     try {
-      if (editing) {
-        const saved = await catalog.update(editing.id, input);
+      if (productToUpdate) {
+        const saved = await catalog.update(productToUpdate.id, input);
         onProductsChange(products.map((item) => item.id === saved.id ? saved : item));
       } else {
         onProductsChange([...products, await catalog.create(input)]);
@@ -136,7 +137,7 @@ export default function AdminPage({ user, products, catalog, onProductsChange, o
         </div>
       </div>
 
-      {error && <p className="mt-5 text-sm font-semibold text-copper-deep" role="alert">{error}</p>}
+      {error && !editing && <p className="mt-5 text-sm font-semibold text-copper-deep" role="alert">{error}</p>}
 
       <div className="mt-8 grid gap-4 sm:grid-cols-3">
         <Metric label="Produtos no catálogo" value={products.length} />
@@ -146,30 +147,7 @@ export default function AdminPage({ user, products, catalog, onProductsChange, o
 
       <section className="mt-14" id="catalogo" aria-labelledby="catalogo-title">
         <h2 className="font-display text-3xl font-bold" id="catalogo-title">Catálogo e preços</h2>
-        <form className="mt-5 grid gap-4 border border-edge/40 bg-white p-5 sm:grid-cols-2 sm:p-7" onSubmit={saveProduct}>
-          <h3 className="m-0 font-display text-xl font-bold sm:col-span-2">{editing ? `Editando: ${editing.name}` : "Cadastrar produto"}</h3>
-          <label className="form-label">Nome
-            <input key={`name-${editing?.id ?? "new"}`} className={fieldClass} name="name" defaultValue={editing?.name ?? ""} maxLength={120} required />
-          </label>
-          <label className="form-label">Segmento
-            <select key={`segment-${editing?.id ?? "new"}`} className={fieldClass} name="segmentId" defaultValue={editing?.segmentId ?? segments[0].id} required>
-              {segments.map((segment) => <option key={segment.id} value={segment.id}>{segment.title}</option>)}
-            </select>
-          </label>
-          <label className="form-label">Material
-            <input key={`material-${editing?.id ?? "new"}`} className={fieldClass} name="material" defaultValue={editing?.material ?? ""} maxLength={100} required />
-          </label>
-          <label className="form-label">Preço em reais (opcional)
-            <input key={`price-${editing?.id ?? "new"}`} className={fieldClass} type="number" name="price" min="0" step="0.01" defaultValue={editing?.price ?? ""} placeholder="Em branco = sob consulta" />
-          </label>
-          <label className="form-label sm:col-span-2">Descrição
-            <textarea key={`description-${editing?.id ?? "new"}`} className={`${fieldClass} min-h-24 resize-y`} name="description" defaultValue={editing?.description ?? ""} maxLength={500} required />
-          </label>
-          <div className="flex flex-wrap gap-3 sm:col-span-2">
-            <button className="btn-dark" type="submit" disabled={busyId === "product"}>{editing ? "Salvar alterações" : "Adicionar produto"}</button>
-            {editing && <button className="min-h-11 px-3 text-sm font-semibold underline underline-offset-4" type="button" onClick={() => setEditing(null)}>Cancelar edição</button>}
-          </div>
-        </form>
+        <ProductForm onSubmit={(event) => void saveProduct(event)} busy={busyId === "product"} />
         <div className="mt-5 grid gap-3">
           {products.map((product) => (
             <article className="flex flex-wrap items-center justify-between gap-4 border border-edge/30 bg-white/70 p-4 sm:px-5" key={product.id}>
@@ -187,6 +165,20 @@ export default function AdminPage({ user, products, catalog, onProductsChange, o
           {products.length === 0 && <p className="text-soft">Nenhum produto cadastrado.</p>}
         </div>
       </section>
+      {editing && (
+        <ProductEditorDialog
+          titleId={`edit-product-title-${editing.id}`}
+          onClose={() => { setEditing(null); setError(""); }}
+        >
+          <ProductForm
+            product={editing}
+            onSubmit={(event) => void saveProduct(event, editing)}
+            busy={busyId === "product"}
+            error={error}
+            onCancel={() => { setEditing(null); setError(""); }}
+          />
+        </ProductEditorDialog>
+      )}
 
       <section className="mt-16" id="pedidos" aria-labelledby="pedidos-title">
         <h2 className="font-display text-3xl font-bold" id="pedidos-title">Pedidos</h2>
@@ -231,6 +223,48 @@ export default function AdminPage({ user, products, catalog, onProductsChange, o
         </div>
       </section>
     </section>
+  );
+}
+
+interface ProductFormProps {
+  product?: Product;
+  busy: boolean;
+  error?: string;
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  onCancel?: () => void;
+}
+
+function ProductForm({ product, busy, error, onSubmit, onCancel }: ProductFormProps) {
+  const key = product?.id ?? "new";
+
+  return (
+    <form className="grid gap-4 border border-edge/40 bg-white p-5 sm:grid-cols-2 sm:p-7" onSubmit={onSubmit}>
+      <h3 className={`m-0 font-display text-xl font-bold sm:col-span-2 ${product ? "pr-12" : ""}`} id={product ? `edit-product-title-${product.id}` : undefined}>
+        {product ? `Editando: ${product.name}` : "Cadastrar produto"}
+      </h3>
+      <label className="form-label">Nome
+        <input key={`name-${key}`} className={fieldClass} name="name" defaultValue={product?.name ?? ""} maxLength={120} required />
+      </label>
+      <label className="form-label">Segmento
+        <select key={`segment-${key}`} className={fieldClass} name="segmentId" defaultValue={product?.segmentId ?? segments[0].id} required>
+          {segments.map((segment) => <option key={segment.id} value={segment.id}>{segment.title}</option>)}
+        </select>
+      </label>
+      <label className="form-label">Material
+        <input key={`material-${key}`} className={fieldClass} name="material" defaultValue={product?.material ?? ""} maxLength={100} required />
+      </label>
+      <label className="form-label">Preço em reais (opcional)
+        <input key={`price-${key}`} className={fieldClass} type="number" name="price" min="0" step="0.01" defaultValue={product?.price ?? ""} placeholder="Em branco = sob consulta" />
+      </label>
+      <label className="form-label sm:col-span-2">Descrição
+        <textarea key={`description-${key}`} className={`${fieldClass} min-h-24 resize-y`} name="description" defaultValue={product?.description ?? ""} maxLength={500} required />
+      </label>
+      {error && <p className="m-0 text-sm font-semibold text-copper-deep sm:col-span-2" role="alert">{error}</p>}
+      <div className="flex flex-wrap gap-3 sm:col-span-2">
+        <button className="btn-dark" type="submit" disabled={busy}>{product ? "Salvar alterações" : "Adicionar produto"}</button>
+        {onCancel && <button className="min-h-11 px-3 text-sm font-semibold underline underline-offset-4" type="button" disabled={busy} onClick={onCancel}>Cancelar edição</button>}
+      </div>
+    </form>
   );
 }
 

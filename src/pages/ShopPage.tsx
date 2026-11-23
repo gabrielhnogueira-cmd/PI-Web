@@ -113,7 +113,7 @@ export default function ShopPage({ segments, products, cart, user, orders, onAdd
           <div className="border-t border-edge/40" />
         </div>
 
-        <aside className="relative h-fit overflow-hidden border border-edge/25 border-l-4 border-l-copper bg-white px-5 pb-6 pt-6 text-ink shadow-[0_14px_36px_rgba(38,41,44,0.07)] sm:px-7 sm:pb-7 sm:pt-8 lg:sticky lg:top-24" aria-label="Resumo do pedido">
+        <aside id="resumo-pedido" className="relative h-fit max-h-[calc(100vh-7rem)] overflow-y-auto overscroll-contain border border-edge/25 border-l-4 border-l-copper bg-white px-5 pb-6 pt-6 text-ink shadow-[0_14px_36px_rgba(38,41,44,0.07)] sm:px-7 sm:pb-7 sm:pt-8 lg:sticky lg:top-24" aria-label="Resumo do pedido">
           {done ? (
             <div role="status">
               <p className="eyebrow mb-2">Solicitação registrada</p>

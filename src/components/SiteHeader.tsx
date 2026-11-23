@@ -1,4 +1,5 @@
 import { useState } from "react";
+import gramanseMark from "../../assets/images/gramanse-mark.png";
 import { Link } from "../lib/router";
 import type { User } from "../services/types";
 
@@ -27,7 +28,7 @@ export default function SiteHeader({ path, user, cartCount, onRequest }: SiteHea
       <div className="h-1 bg-copper" aria-hidden="true" />
       <nav className="relative mx-auto flex min-h-[4.5rem] w-[min(100%-2rem,1160px)] items-center justify-between gap-4 sm:min-h-[5rem]" aria-label="Navegação principal">
         <Link className="flex min-w-0 shrink-0 items-center gap-2.5 text-ink no-underline sm:gap-3" to="/" onClick={closeMenu}>
-          <img className="h-14 w-14 shrink-0 object-contain" src="/assets/images/gramanse-mark.png" alt="" />
+          <img className="h-14 w-14 shrink-0 object-contain" src={gramanseMark} alt="" />
           <span className="flex min-w-0 flex-col leading-tight">
             <span className="truncate font-display text-base font-bold uppercase tracking-[0.04em] sm:text-lg">Cerâmica Gramanse</span>
             <span className="mt-1 font-display text-[0.58rem] font-semibold uppercase tracking-[0.14em] text-copper-deep sm:text-[0.62rem]">Refratários técnicos</span>

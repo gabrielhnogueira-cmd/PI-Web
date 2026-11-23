@@ -1,4 +1,5 @@
 import { brl } from "../lib/format";
+import { products as catalogProducts } from "../data/catalog";
 import type { Product } from "../data/catalog";
 import PieceArt from "./PieceArt";
 
@@ -11,11 +12,18 @@ interface ProductRowProps {
 }
 
 export default function ProductRow({ product, onAdd, onQuote, dark = false, quantity = 0 }: ProductRowProps) {
+  const imageUrl = product.imageUrl ?? catalogProducts.find((item) => item.id === product.id)?.imageUrl;
+  const imageSurface = imageUrl && dark ? "bg-white" : dark ? "bg-white/[0.06] text-copper" : "bg-chamote/60 text-copper-deep";
+
   return (
     <article className={`group relative grid overflow-hidden border transition duration-200 hover:-translate-y-0.5 sm:min-h-48 sm:grid-cols-[7.5rem_minmax(0,1fr)_14rem] sm:items-stretch ${dark ? "border-white/15 bg-white/[0.035] text-fundo hover:border-copper/60 hover:bg-white/[0.07]" : "border-edge/25 bg-white/70 text-ink hover:border-copper/60 hover:bg-white hover:shadow-[0_10px_26px_rgba(38,41,44,0.09)]"}`}>
-      <div className={`relative grid min-h-28 place-items-center overflow-hidden sm:min-h-48 ${dark ? "bg-white/[0.06] text-copper" : "bg-chamote/60 text-copper-deep"}`}>
+      <div className={`relative grid min-h-28 place-items-center overflow-hidden sm:min-h-48 ${imageSurface}`}>
         <span className={`absolute left-3 top-3 font-display text-[0.58rem] font-bold tracking-[0.12em] ${dark ? "text-chamote/70" : "text-soft/70"}`}>{String(product.id).padStart(2, "0")}</span>
-        <PieceArt segmentId={product.segmentId} className="h-12 w-12 transition-transform duration-300 group-hover:scale-110 sm:h-14 sm:w-14" />
+        {imageUrl ? (
+          <img className="h-full w-full object-contain p-2" src={imageUrl} alt={`Foto de ${product.name}`} />
+        ) : (
+          <PieceArt segmentId={product.segmentId} className="h-12 w-12 transition-transform duration-300 group-hover:scale-110 sm:h-14 sm:w-14" />
+        )}
       </div>
       <div className="flex min-w-0 flex-col justify-center p-4 sm:px-6 sm:py-5">
         <div className="flex min-h-5 flex-wrap items-center justify-between gap-x-4 gap-y-1">
